@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OPK Reservation</title>
+  <style>
+    :root{--primary:#2563eb;--bg:#0f172a;--card:#111827;--text:#e5e7eb;--muted:#9ca3af;--accent:#22c55e;--danger:#ef4444}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(135deg,#0b1220,#111827);color:var(--text)}
+    .wrap{max-width:980px;margin:auto;padding:16px}
+    .card{background:rgba(17,24,39,.9);backdrop-filter: blur(8px);border:1px solid #1f2937;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+    h1,h2{margin:0 0 10px}
+    .grid{display:grid;gap:10px}
+    @media(min-width:640px){.grid-2{grid-template-columns:1fr 1fr}}
+    input,select,button{width:100%;padding:12px;border-radius:10px;border:1px solid #374151;background:#020617;color:var(--text)}
+    input::placeholder{color:#6b7280}
+    button{background:var(--primary);border:none;cursor:pointer;font-weight:600}
+    button:hover{opacity:.9}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .badge{padding:4px 8px;border-radius:999px;background:#020617;border:1px solid #374151;color:var(--muted);font-size:12px}
+    .status{margin-top:8px;font-size:13px}
+    .ok{color:var(--accent)}
+    .err{color:var(--danger)}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .tabs button{background:#020617;border:1px solid #374151}
+    .tabs button.active{background:var(--primary)}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid #1f2937;text-align:left;font-size:13px}
+    th{color:#9ca3af}
+    .pill{font-size:12px;padding:4px 8px;border-radius:999px;background:#020617;border:1px solid #374151}
+    .btn{padding:8px 10px;border-radius:8px;border:none;cursor:pointer}
+    .btn-danger{background:var(--danger)}
+    .btn-secondary{background:#334155}
+    .footer{opacity:.7;font-size:12px;margin-top:10px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <h1>OPK Reservation</h1>
+      <div class="tabs">
+        <button id="tabBook" class="active">Booking</button>
+        <button id="tabAdmin">Admin</button>
+      </div>
+    </div>
+
+    <!-- BOOKING -->
+    <div id="bookingView" class="card">
+      <h2>Reserve Slot <span class="badge">8:00 PM – 10:15 PM (15 mins)</span></h2>
+      <form id="bookingForm" class="grid grid-2">
+        <input id="name" placeholder="Bigo Name" required />
+        <input id="bigoId" placeholder="Bigo ID" required />
+        <input id="agency" placeholder="Agency" required />
+        <input id="date" type="date" required />
+        <select id="time"></select>
+        <button type="submit">Reserve</button>
+      </form>
+      <div id="status" class="status"></div>
+      <div class="footer">Tip: If a slot is taken, it will show as Not Available.</div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="adminView" class="card" style="display:none">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <h2>Admin Dashboard</h2>
+        <div class="row">
+          <button id="exportBtn" class="btn btn-secondary">Export CSV</button>
+          <button id="clearBtn" class="btn btn-danger">Clear All</button>
+        </div>
+      </div>
+      <div style="overflow:auto;margin-top:10px">
+        <table id="table">
+          <thead>
+            <tr>
+              <th>Name</th><th>Bigo ID</th><th>Agency</th><th>Date</th><th>Time</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+<script>
+const timeSelect = document.getElementById("time");
+let bookings = JSON.parse(localStorage.getItem("bookings") || "[]");
+
+// Tabs
+const tabBook = document.getElementById('tabBook');
+const tabAdmin = document.getElementById('tabAdmin');
+const bookingView = document.getElementById('bookingView');
+const adminView = document.getElementById('adminView');
+
+tabBook.onclick = () => { tabBook.classList.add('active'); tabAdmin.classList.remove('active'); bookingView.style.display='block'; adminView.style.display='none'; };
+tabAdmin.onclick = () => { tabAdmin.classList.add('active'); tabBook.classList.remove('active'); bookingView.style.display='none'; adminView.style.display='block'; renderTable(); };
+
+// Generate times 8:00 PM to 10:15 PM (15 mins)
+function generateTimes(){
+  timeSelect.innerHTML = '';
+  let start = 20*60; // 8:00 PM
+  let end = 22*60 + 15; // 10:15 PM
+  for(let t=start; t<=end; t+=15){
+    const hour24 = Math.floor(t/60);
+    const min = t%60;
+    const hour12 = hour24>12 ? hour24-12 : hour24;
+    const ampm = hour24>=12 ? 'PM':'AM';
+    const label = `${hour12}:${String(min).padStart(2,'0')} ${ampm}`;
+    const opt = document.createElement('option');
+    opt.value = label;
+    opt.textContent = label;
+    timeSelect.appendChild(opt);
+  }
+}
+
+generateTimes();
+
+function isTaken(date,time){
+  return bookings.some(b=>b.date===date && b.time===time);
+}
+
+// Update select to show availability for chosen date
+const dateInput = document.getElementById('date');
+dateInput.addEventListener('change', updateAvailability);
+
+function updateAvailability(){
+  const date = dateInput.value;
+  Array.from(timeSelect.options).forEach(opt=>{
+    if(!date){ opt.textContent = opt.value; opt.disabled=false; return; }
+    if(isTaken(date, opt.value)){
+      opt.textContent = opt.value + ' - Not Available';
+      opt.disabled = true;
+    } else {
+      opt.textContent = opt.value;
+      opt.disabled = false;
+    }
+  });
+}
+
+// Booking submit
+const form = document.getElementById('bookingForm');
+form.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const name = document.getElementById('name').value.trim();
+  const bigoId = document.getElementById('bigoId').value.trim();
+  const agency = document.getElementById('agency').value.trim();
+  const date = document.getElementById('date').value;
+  const time = document.getElementById('time').value;
+
+  if(isTaken(date,time)){
+    setStatus('Time not available. Please choose another slot.','err');
+    updateAvailability();
+    return;
+  }
+
+  bookings.push({name,bigoId,agency,date,time});
+  localStorage.setItem('bookings', JSON.stringify(bookings));
+  setStatus('Reservation saved! Opening email...','ok');
+  updateAvailability();
+
+  // Open email (mailto)
+  const mailto = `mailto:crinoel1217@gmail.com?subject=OPK Reservation&body=Name:${encodeURIComponent(name)}%0ABigoID:${encodeURIComponent(bigoId)}%0AAgency:${encodeURIComponent(agency)}%0ADate:${encodeURIComponent(date)}%0ATime:${encodeURIComponent(time)}`;
+  window.location.href = mailto;
+
+  form.reset();
+});
+
+function setStatus(msg,type){
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status ' + (type==='ok'?'ok':'err');
+}
+
+// Admin table
+function renderTable(){
+  const tbody = document.querySelector('#table tbody');
+  tbody.innerHTML = '';
+  bookings
+    .sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time))
+    .forEach((b,idx)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${b.name}</td>
+        <td>${b.bigoId}</td>
+        <td>${b.agency}</td>
+        <td><span class="pill">${b.date}</span></td>
+        <td><span class="pill">${b.time}</span></td>
+        <td><button class="btn btn-danger" data-i="${idx}">Delete</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+  // delete handlers
+  tbody.querySelectorAll('button[data-i]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const i = Number(btn.getAttribute('data-i'));
+      bookings.splice(i,1);
+      localStorage.setItem('bookings', JSON.stringify(bookings));
+      renderTable();
+      updateAvailability();
+    };
+  });
+}
+
+// Export CSV
+function exportCSV(){
+  const header = ['Name','BigoID','Agency','Date','Time'];
+  const rows = bookings.map(b=>[b.name,b.bigoId,b.agency,b.date,b.time]);
+  const csv = [header, ...rows].map(r=> r.map(x=> `"${String(x).replaceAll('"','""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'opk_bookings.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('exportBtn').onclick = exportCSV;
+
+// Clear all
+const clearBtn = document.getElementById('clearBtn');
+clearBtn.onclick = ()=>{
+  if(confirm('Clear all bookings?')){
+    bookings = [];
+    localStorage.setItem('bookings', JSON.stringify(bookings));
+    renderTable();
+    updateAvailability();
+  }
+};
+</script>
+</body>
+</html>
