@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -29,79 +29,7 @@ header{
   -webkit-background-clip:text;
   color:transparent;
 }
-.slots{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin-top:12px;
-}
-  .slot{
-  padding:14px;
-  border-radius:14px;
-  text-align:center;
-  font-size:13px;
-  font-weight:600;
-  background:rgba(255,255,255,0.06);
-  border:1px solid rgba(255,255,255,0.08);
-  cursor:pointer;
-  transition:all .2s ease;
-  user-select:none;
-  position:relative;
-  overflow:hidden;
-}
-  .slot:hover{
-  transform:translateY(-2px);
-  background:rgba(34,211,238,0.10);
-  border:1px solid rgba(34,211,238,0.4);
-}
 
-.slot:active{
-  transform:scale(0.97);
-}
-
-.selected{
-  border:2px solid var(--accent2);
-  background:rgba(34,211,238,0.18);
-  box-shadow:0 0 12px rgba(34,211,238,0.3);
-}
-
-#confirmPage{
-  display:none;
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:rgba(0,0,0,0.9);
-  z-index:999;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-}
-
-.confirmBox{
-  background:rgba(255,255,255,0.08);
-  padding:20px;
-  border-radius:15px;
-  max-width:320px;
-}
-
-.error{
-  color:#ef4444;
-  font-size:12px;
-  margin-top:10px;
-}
-
-.admin{display:none}
-
-/* footer */
-.footer{
-  margin-top:20px;
-  text-align:center;
-  padding:15px;
-  font-size:13px;
-  opacity:0.9;
-  background:rgba(255,255,255,0.05);
-  border-radius:12px;
-}
 .container{max-width:1200px;margin:auto;padding:15px}
 .grid{display:grid;gap:15px}
 @media(min-width:768px){.grid{grid-template-columns:1fr 1fr}}
@@ -133,7 +61,7 @@ button{
 .slots-grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:8px;
+  gap:10px;
   margin-top:10px;
 }
 
@@ -143,11 +71,23 @@ button{
   text-align:center;
   font-size:13px;
   background:rgba(255,255,255,0.08);
+  cursor:pointer;
+  transition:0.2s;
+  border:1px solid rgba(255,255,255,0.08);
 }
 
-.available{color:var(--green);cursor:pointer}
+.slot-btn:hover{
+  transform:translateY(-2px);
+  background:rgba(34,211,238,0.10);
+}
+
+.available{color:var(--green)}
 .taken{color:var(--red);opacity:.6}
-.selected{border:1px solid var(--accent2)}
+
+.selected{
+  border:2px solid var(--accent2);
+  background:rgba(34,211,238,0.18);
+}
 
 .admin{display:none}
 
@@ -172,6 +112,17 @@ button{
   padding:10px;
   border-radius:10px;
   background:rgba(255,255,255,0.06);
+}
+
+/* footer */
+.footer{
+  margin-top:20px;
+  text-align:center;
+  padding:15px;
+  font-size:13px;
+  opacity:0.9;
+  background:rgba(255,255,255,0.05);
+  border-radius:12px;
 }
 </style>
 </head>
@@ -211,19 +162,6 @@ button{
 <button id="loginBtn">Login</button>
 <button id="logoutBtn">Logout</button>
 
-<h4 style="margin-top:15px">🔍 Search</h4>
-<input id="searchInput" placeholder="Search name / ID / date">
-<button onclick="searchBookings()">Search</button>
-
-<input id="filterDate" type="date">
-<button onclick="filterByDate()">Filter Date</button>
-<button onclick="resetFilter()">Reset</button>
-
-<div class="summaryBox">
-<h4>📊 OPK Summary</h4>
-<div id="summary"></div>
-</div>
-
 </div>
 
 <!-- ADMIN DASHBOARD -->
@@ -241,13 +179,19 @@ button{
 <span id="today" class="badge">0</span>
 </div>
 
-<button onclick="downloadCSV()">⬇ Download CSV</button>
-
 <h4 style="margin-top:10px">Bookings</h4>
 <div id="records"></div>
 
 </div>
 
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <h4>📩 For Inquiries</h4>
+  <p>📞 09911530204</p>
+  <p>📧 CRISNOEL1217@GMAIL.COM</p>
+  <p>🎯 BIGO ID: TRD10_28</p>
 </div>
 
 <script type="module">
@@ -256,12 +200,9 @@ import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.c
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
- apiKey: "AIzaSyBJBT_BAeos1hb_fKJzSontJVgBub9Wjhc",
- authDomain: "opk-system-cn.firebaseapp.com",
- projectId: "opk-system-cn",
- storageBucket: "opk-system-cn.appspot.com",
- messagingSenderId: "1098097772017",
- appId: "1:1098097772017:web:4e015378c786d6b404f050"
+ apiKey: "YOUR_API_KEY",
+ authDomain: "YOUR_AUTH_DOMAIN",
+ projectId: "YOUR_PROJECT_ID"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -270,23 +211,8 @@ const auth = getAuth(app);
 
 let selectedTime = "";
 let allBookings = [];
-let filtered = [];
 
-const els = {
- name:document.getElementById("name"),
- id:document.getElementById("id"),
- lvl:document.getElementById("lvl"),
- agency:document.getElementById("agency"),
- gmail:document.getElementById("gmail"),
- date:document.getElementById("date"),
- slots:document.getElementById("slots"),
- error:document.getElementById("error"),
- adminPanel:document.getElementById("adminPanel"),
- records:document.getElementById("records"),
- total:document.getElementById("total"),
- today:document.getElementById("today"),
- summary:document.getElementById("summary")
-};
+const slots = document.getElementById("slots");
 
 function generateSlots(){
  let s=[],h=20,m=0;
@@ -297,134 +223,80 @@ function generateSlots(){
  return s;
 }
 
-async function load(){
- const snap = await getDocs(collection(db,"bookings"));
- allBookings = snap.docs.map(d=>d.data());
- filtered = allBookings;
-}
+function renderSlots(){
+ slots.innerHTML="";
+ generateSlots().forEach(t=>{
+  let d=document.createElement("div");
+  d.className="slot-btn";
+  d.textContent=t;
 
-function renderList(data){
- els.records.innerHTML="";
- data.forEach(b=>{
-  const div=document.createElement("div");
-  div.className="slot-btn";
-  div.textContent=`${b.name} | ${b.id} | ${b.time} | ${b.date}`;
-  els.records.appendChild(div);
+  d.onclick=()=>{
+    document.querySelectorAll(".slot-btn").forEach(x=>x.classList.remove("selected"));
+    d.classList.add("selected");
+    selectedTime=t;
+  };
+
+  slots.appendChild(d);
  });
 }
 
-function renderSummary(){
- const map={};
- allBookings.forEach(b=>{
-  map[b.date]=(map[b.date]||0)+1;
- });
- els.summary.innerHTML="";
- Object.keys(map).forEach(d=>{
-  const div=document.createElement("div");
-  div.textContent=`${d} = ${map[d]} OPK`;
-  els.summary.appendChild(div);
- });
-}
+renderSlots();
 
-window.searchBookings=function(){
- const key=document.getElementById("searchInput").value.toLowerCase();
-
- filtered = allBookings.filter(b=>
-  (b.name||"").toLowerCase().includes(key) ||
-  (b.id||"").toLowerCase().includes(key) ||
-  (b.date||"").includes(key)
- );
-
- renderList(filtered);
-}
-
-window.filterByDate=function(){
- const d=document.getElementById("filterDate").value;
- filtered = allBookings.filter(b=>b.date===d);
- renderList(filtered);
-}
-
-window.resetFilter=function(){
- filtered = allBookings;
- renderList(allBookings);
-}
-
-function downloadCSV(){
- let csv="Name,ID,Level,Agency,Gmail,Date,Time\n";
- filtered.forEach(b=>{
-  csv+=`${b.name},${b.id},${b.lvl},${b.agency},${b.gmail},${b.date},${b.time}\n`;
- });
-
- const blob=new Blob([csv],{type:"text/csv"});
- const url=URL.createObjectURL(blob);
- const a=document.createElement("a");
- a.href=url;
- a.download="opk-bookings.csv";
- a.click();
-}
-
-async function login(){
+/* BOOK */
+window.book = async function(){
  try{
-  await signInWithEmailAndPassword(auth,adminEmail.value,adminPassword.value);
+  await addDoc(collection(db,"bookings"),{
+    name:document.getElementById("name").value,
+    id:document.getElementById("id").value,
+    lvl:document.getElementById("lvl").value,
+    agency:document.getElementById("agency").value,
+    gmail:document.getElementById("gmail").value,
+    date:document.getElementById("date").value,
+    time:selectedTime
+  });
+
+  alert("Booked ✅");
+ }catch(e){
+  alert("Error booking (check Firebase rules)");
+ }
+}
+
+/* ADMIN LOGIN (SIMPLE) */
+window.login = async function(){
+ const email = adminEmail.value;
+ const pass = adminPassword.value;
+
+ try{
+  await signInWithEmailAndPassword(auth,email,pass);
  }catch(e){
   alert("Login failed");
  }
 }
 
-function logout(){signOut(auth)}
+window.logout = function(){
+ signOut(auth);
+}
 
-onAuthStateChanged(auth,(u)=>{
- if(u){
-  els.adminPanel.style.display="block";
-  loadAdmin();
- }else{
-  els.adminPanel.style.display="none";
+onAuthStateChanged(auth,async(user)=>{
+ if(user){
+  document.getElementById("adminPanel").style.display="block";
+  const snap = await getDocs(collection(db,"bookings"));
+
+  const box=document.getElementById("records");
+  box.innerHTML="";
+
+  snap.forEach(d=>{
+    let b=d.data();
+    box.innerHTML += `<div class="slot-btn">${b.name} | ${b.time} | ${b.date}</div>`;
+  });
+
+  document.getElementById("total").innerText = snap.size;
+ }
+ else{
+  document.getElementById("adminPanel").style.display="none";
  }
 });
-
-async function loadAdmin(){
- await load();
- renderList(allBookings);
- renderSummary();
- els.total.textContent = allBookings.length;
-
- const today=new Date().toISOString().split('T')[0];
- els.today.textContent = allBookings.filter(b=>b.date===today).length;
-}
-
-date.onchange=render;
-bookBtn.onclick=book;
-loginBtn.onclick=login;
-logoutBtn.onclick=logout;
-
-async function book(){
- const data={
-  name:name.value.trim(),
-  id:id.value.trim(),
-  lvl:lvl.value.trim(),
-  agency:agency.value.trim(),
-  gmail:gmail.value.trim(),
-  date:date.value,
-  time:selectedTime
- };
-
- if(!data.name||!data.id||!data.gmail||!data.date||!data.time){
-  error.textContent="Fill all fields";
-  return;
- }
-
- await addDoc(collection(db,"bookings"),data);
- await load();
- render();
- alert("Booked ✅");
-}
-
 </script>
-<div class="footer">
-  <h4>📩 For Inquiries</h4>
-  <p>📞 09911530204</p>
-  <p>📧 CRISNOEL1217@GMAIL.COM</p>
-  <p>🎯 BIGO ID: TRD10_28</p>
-</div>
+
 </body>
 </html>
