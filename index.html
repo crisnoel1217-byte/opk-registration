@@ -240,11 +240,10 @@ function generateSlots(){
  return s;
 }
 
-async function load(){
- const snap=await getDocs(collection(db,"bookings"));
- allBookings=snap.docs.map(d=>d.data());
- filtered=allBookings;
-}
+allBookings = snap.docs.map(d => ({
+  id: d.id,
+  ...d.data()
+}));
 
 function renderList(data){
  els.records.innerHTML="";
