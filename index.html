@@ -71,11 +71,15 @@ button{
   font-size:12px;
   background:rgba(255,255,255,0.08);
   cursor:pointer;
+  transition:0.2s;
+}
+
+.slot:hover{
+  transform:scale(1.03);
 }
 
 .available{color:var(--green)}
-.taken{color:var(--red);opacity:.5}
-.selected{border:1px solid var(--accent2)}
+.selected{border:2px solid var(--accent2); background:rgba(34,211,238,0.15)}
 
 .badge{padding:4px 10px;border-radius:999px;font-size:12px}
 
@@ -99,12 +103,32 @@ button{
 .admin{display:none}
 
 .summary{margin-top:10px;background:rgba(255,255,255,0.06);padding:10px;border-radius:10px}
+
+/* CONFIRM PAGE */
+#confirmPage{
+  display:none;
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.9);
+  z-index:999;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+.confirmBox{
+  background:rgba(255,255,255,0.08);
+  padding:20px;
+  border-radius:15px;
+  max-width:320px;
+}
 </style>
 </head>
 
 <body>
 
-<header> CN OPK MANAGEMENT SYSTEM</header>
+<header>🔥 CN OPK MANAGEMENT SYSTEM</header>
 
 <div class="container grid">
 
@@ -127,33 +151,35 @@ button{
 
 <!-- ADMIN -->
 <div class="card">
-<h3>🔐 Admin Login</h3>
-
+<h3>🔐 Admin</h3>
 <input id="adminEmail" placeholder="Email">
 <input id="adminPassword" type="password" placeholder="Password">
-
 <button onclick="login()">Login</button>
 <button onclick="logout()">Logout</button>
 
-<input id="search" placeholder="Search name / id / date">
+<input id="search" placeholder="Search">
 <button onclick="search()">Search</button>
 
 <div class="summary">
 <h4>📊 Summary</h4>
 <div id="summaryBox"></div>
 </div>
-
 </div>
 
-<!-- DASHBOARD -->
 <div class="card admin" id="adminPanel">
-
-<h3>📊 OPK Dashboard</h3>
-
+<h3>📊 Dashboard</h3>
 <div id="list"></div>
+</div>
 
 </div>
 
+<!-- CONFIRM PAGE -->
+<div id="confirmPage">
+  <div class="confirmBox">
+    <h2>🎉 Booking Confirmed</h2>
+    <p>We have received your booking. THANK YOU</p>
+    <button onclick="closeConfirm()">Close</button>
+  </div>
 </div>
 
 <script type="module">
@@ -161,8 +187,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBJBT_BAeos1hb_fKJzSontJVgBub9Wjhc",
+const firebaseConfig={
+apiKey: "AIzaSyBJBT_BAeos1hb_fKJzSontJVgBub9Wjhc",
  authDomain: "opk-system-cn.firebaseapp.com",
  projectId: "opk-system-cn",
  storageBucket: "opk-system-cn.appspot.com",
@@ -170,9 +196,9 @@ const firebaseConfig = {
  appId: "1:1098097772017:web:4e015378c786d6b404f050"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const auth=getAuth(app);
 
 let all=[];
 let selected="";
@@ -189,124 +215,55 @@ function slotsGen(){
 function renderSlots(){
  let box=document.getElementById("slots");
  box.innerHTML="";
+
  slotsGen().forEach(t=>{
   let d=document.createElement("div");
-  d.className="slot";
+  d.className="slot available";
   d.textContent=t;
-  d.onclick=()=>selected=t;
+
+  d.onclick=()=>{
+    document.querySelectorAll(".slot").forEach(x=>x.classList.remove("selected"));
+    d.classList.add("selected");
+    selected=t;
+  };
+
   box.appendChild(d);
  });
 }
 
-async function load(){
- const snap=await getDocs(collection(db,"opk"));
- all=snap.docs.map(d=>({id:d.id,...d.data()}));
- renderList(all);
- summary();
-}
-
-function badge(s){
- return `<span class='badge ${s}'>${s}</span>`;
-}
-
-function renderList(data){
- let box=document.getElementById("list");
- box.innerHTML="";
- data.forEach(b=>{
-  let div=document.createElement("div");
-  div.className="item";
-  div.innerHTML=`
-  <b>${b.name}</b> (${b.bid})<br>
-  ${b.time} | ${b.date}<br>
-  ${badge(b.status)}<br>
-
-  <button class='smallBtn' onclick="approve('${b.id}')">Approve</button>
-  <button class='smallBtn' onclick="cancel('${b.id}')">Cancel</button>
-  <button class='smallBtn' onclick="remove('${b.id}')">Delete</button>
-  `;
-  box.appendChild(div);
- });
-}
-
-function summary(){
- let box=document.getElementById("summaryBox");
- let map={pending:0,approved:0,cancelled:0};
- all.forEach(a=>map[a.status]++);
- box.innerHTML=`Pending:${map.pending||0}<br>Approved:${map.approved||0}<br>Cancelled:${map.cancelled||0}`;
-}
-
 window.book=async function(){
+
+ if(!selected){alert("Please select time");return;}
+
  await addDoc(collection(db,"opk"),{
-  name:document.getElementById("name").value,
-  bid:document.getElementById("bid").value,
-  lvl:document.getElementById("lvl").value,
-  agency:document.getElementById("agency").value,
-  gmail:document.getElementById("gmail").value,
-  date:document.getElementById("date").value,
+  name:name.value,
+  bid:bid.value,
+  lvl:lvl.value,
+  agency:agency.value,
+  gmail:gmail.value,
+  date:date.value,
   time:selected,
   status:"pending"
  });
- alert("✅ We have received your booking. THANK YOU"); showConfirmPage();
+
+ alert("✅ We have received your booking. THANK YOU");
+ showConfirm();
  load();
 }
 
-window.approve=async function(id){
- await updateDoc(doc(db,"opk",id),{status:"approved"});
- load();
+window.showConfirm=function(){
+ document.getElementById("confirmPage").style.display="flex";
 }
 
-window.cancel=async function(id){
- await updateDoc(doc(db,"opk",id),{status:"cancelled"});
- load();
+window.closeConfirm=function(){
+ document.getElementById("confirmPage").style.display="none";
 }
-
-window.remove=async function(id){
- await deleteDoc(doc(db,"opk",id));
- load();
-}
-
-window.search=function(){
- let k=document.getElementById("search").value.toLowerCase();
- renderList(all.filter(a=>(a.name||"").toLowerCase().includes(k)||(a.bid||"").includes(k)||(a.date||"").includes(k)));
-}
-
-async function login(){
- await signInWithEmailAndPassword(auth,adminEmail.value,adminPassword.value);
-}
-
-function logout(){signOut(auth)}
-
-onAuthStateChanged(auth,u=>{
- document.getElementById("adminPanel").style.display=u?"block":"none";
- if(u) load();
-});
 
 renderSlots();
 </script>
 
-
-<!-- BOOKING CONFIRMATION PAGE -->
-<div id="confirmPage" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:999;align-items:center;justify-content:center;flex-direction:column;text-align:center;color:white;padding:20px;">
-  <div style="background:rgba(255,255,255,0.08);padding:20px;border-radius:15px;max-width:350px">
-    <h2>🎉 Booking Confirmed</h2>
-    <p style="margin-top:10px">We have received your OPK booking successfully.</p>
-    <p style="margin-top:10px;color:#22c55e">Please wait for admin confirmation.</p>
-    <button onclick="closeConfirmPage()" style="margin-top:15px">Close</button>
-  </div>
-</div>
-
-<script>
-function showConfirmPage(){
- document.getElementById('confirmPage').style.display='flex';
-}
-function closeConfirmPage(){
- document.getElementById('confirmPage').style.display='none';
-}
-</script>
-
-
-<!-- INQUIRY SECTION -->
-<div style="text-align:center;padding:20px;font-size:13px;opacity:0.9">
+<!-- CONTACT INFO FOOTER -->
+<div style="text-align:center;margin-top:25px;padding:15px;font-size:13px;opacity:0.9">
   <h4>📩 For Inquiries</h4>
   <p>📞 09911530204</p>
   <p>📧 CRISNOEL1217@GMAIL.COM</p>
