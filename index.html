@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CN OPK MANAGEMENT SYSTEM</title>
+<title>CN OPK PRO DASHBOARD V2</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
@@ -32,7 +32,7 @@ header{
 
 .container{max-width:1200px;margin:auto;padding:15px}
 .grid{display:grid;gap:15px}
-@media(min-width:900px){.grid{grid-template-columns:1fr 1fr}}
+@media(min-width:768px){.grid{grid-template-columns:1fr 1fr}}
 
 .card{
   background:rgba(255,255,255,0.05);
@@ -41,7 +41,7 @@ header{
   backdrop-filter:blur(10px);
 }
 
-input,button,select{
+input,button{
   width:100%;
   padding:12px;
   margin-top:10px;
@@ -49,7 +49,7 @@ input,button,select{
   border:none;
 }
 
-input,select{background:#020617;color:white}
+input{background:#020617;color:white}
 
 button{
   background:linear-gradient(90deg,var(--accent),var(--accent2));
@@ -57,151 +57,166 @@ button{
   cursor:pointer;
 }
 
-/* ⭐ IMPROVED SLOT UI */
-.slots{
+/* slots */
+.slots-grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin-top:12px;
-}
-
-.slot{
-  padding:14px;
-  border-radius:14px;
-  text-align:center;
-  font-size:13px;
-  font-weight:600;
-  background:rgba(255,255,255,0.06);
-  border:1px solid rgba(255,255,255,0.08);
-  cursor:pointer;
-  transition:all .2s ease;
-  user-select:none;
-  position:relative;
-  overflow:hidden;
-}
-
-.slot:hover{
-  transform:translateY(-2px);
-  background:rgba(34,211,238,0.10);
-  border:1px solid rgba(34,211,238,0.4);
-}
-
-.slot:active{
-  transform:scale(0.97);
-}
-
-.selected{
-  border:2px solid var(--accent2);
-  background:rgba(34,211,238,0.18);
-  box-shadow:0 0 12px rgba(34,211,238,0.3);
-}
-
-#confirmPage{
-  display:none;
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:rgba(0,0,0,0.9);
-  z-index:999;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-}
-
-.confirmBox{
-  background:rgba(255,255,255,0.08);
-  padding:20px;
-  border-radius:15px;
-  max-width:320px;
-}
-
-.error{
-  color:#ef4444;
-  font-size:12px;
+  gap:8px;
   margin-top:10px;
 }
 
+.slot-btn{
+  padding:10px;
+  border-radius:10px;
+  text-align:center;
+  font-size:13px;
+  background:rgba(255,255,255,0.08);
+}
+
+.available{color:var(--green);cursor:pointer}
+.taken{color:var(--red);opacity:.6}
+.selected{border:1px solid var(--accent2)}
+
 .admin{display:none}
 
-/* footer */
-.footer{
-  margin-top:20px;
-  text-align:center;
-  padding:15px;
-  font-size:13px;
-  opacity:0.9;
-  background:rgba(255,255,255,0.05);
-  border-radius:12px;
+.error{color:#f87171;font-size:13px;margin-top:6px}
+
+.badge{
+  background:var(--accent2);
+  color:black;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:12px;
+}
+
+.stats{
+  display:flex;
+  justify-content:space-between;
+  margin-top:8px;
+}
+
+.summaryBox{
+  margin-top:10px;
+  padding:10px;
+  border-radius:10px;
+  background:rgba(255,255,255,0.06);
 }
 </style>
 </head>
 
 <body>
 
-<header>🔥 CN OPK MANAGEMENT SYSTEM</header>
+<header> CN OPK BOOKING SYSTEM</header>
 
 <div class="container grid">
 
+<!-- BOOKING -->
 <div class="card">
-<h3>📅 Book OPK</h3>
+<h3>📅 Booking</h3>
 
 <input id="name" placeholder="Bigo Name">
-<input id="bid" placeholder="Bigo ID">
+<input id="id" placeholder="Bigo ID">
 <input id="lvl" placeholder="Level">
 <input id="agency" placeholder="Agency">
 <input id="gmail" placeholder="Gmail">
 <input id="date" type="date">
 
 <h4 style="margin-top:10px">Select Time</h4>
-<div id="slots" class="slots"></div>
+<div id="slots" class="slots-grid"></div>
 
-<button onclick="book()">Reserve OPK</button>
+<div id="error" class="error"></div>
 
-<div id="err" class="error"></div>
+<button id="bookBtn">Reserve</button>
 </div>
 
+<!-- ADMIN LOGIN -->
 <div class="card">
 <h3>🔐 Admin Login</h3>
-<input id="adminPass" type="password" placeholder="Enter Password">
-<button onclick="login()">Login</button>
-<button onclick="logout()">Logout</button>
+
+<input id="adminEmail" placeholder="Email">
+<input id="adminPassword" type="password" placeholder="Password">
+
+<button id="loginBtn">Login</button>
+<button id="logoutBtn">Logout</button>
+
+<h4 style="margin-top:15px">🔍 Search</h4>
+<input id="searchInput" placeholder="Search name / ID / date">
+<button onclick="searchBookings()">Search</button>
+
+<input id="filterDate" type="date">
+<button onclick="filterByDate()">Filter Date</button>
+<button onclick="resetFilter()">Reset</button>
+
+<div class="summaryBox">
+<h4>📊 OPK Summary</h4>
+<div id="summary"></div>
 </div>
 
+</div>
+
+<!-- ADMIN DASHBOARD -->
 <div class="card admin" id="adminPanel">
+
 <h3>📊 Dashboard</h3>
-<div id="list"></div>
+
+<div class="stats">
+<span>Total</span>
+<span id="total" class="badge">0</span>
 </div>
+
+<div class="stats">
+<span>Today</span>
+<span id="today" class="badge">0</span>
+</div>
+
+<button onclick="downloadCSV()">⬇ Download CSV</button>
+
+<h4 style="margin-top:10px">Bookings</h4>
+<div id="records"></div>
 
 </div>
 
-<div id="confirmPage">
-  <div class="confirmBox">
-    <h2>🎉 Booking Confirmed</h2>
-    <p>We have received your booking. THANK YOU</p>
-    <button onclick="closeConfirm()">Close</button>
-  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-const firebaseConfig={
-  apiKey:"YOUR_API_KEY",
-  authDomain:"YOUR_AUTH_DOMAIN",
-  projectId:"YOUR_PROJECT_ID"
+const firebaseConfig = {
+ apiKey: "AIzaSyBJBT_BAeos1hb_fKJzSontJVgBub9Wjhc",
+ authDomain: "opk-system-cn.firebaseapp.com",
+ projectId: "opk-system-cn",
+ storageBucket: "opk-system-cn.appspot.com",
+ messagingSenderId: "1098097772017",
+ appId: "1:1098097772017:web:4e015378c786d6b404f050"
 };
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
-const auth=getAuth(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-let selected="";
+let selectedTime = "";
+let allBookings = [];
+let filtered = [];
 
-signInAnonymously(auth).catch(console.error);
+const els = {
+ name:document.getElementById("name"),
+ id:document.getElementById("id"),
+ lvl:document.getElementById("lvl"),
+ agency:document.getElementById("agency"),
+ gmail:document.getElementById("gmail"),
+ date:document.getElementById("date"),
+ slots:document.getElementById("slots"),
+ error:document.getElementById("error"),
+ adminPanel:document.getElementById("adminPanel"),
+ records:document.getElementById("records"),
+ total:document.getElementById("total"),
+ today:document.getElementById("today"),
+ summary:document.getElementById("summary")
+};
 
-function slotsGen(){
+function generateSlots(){
  let s=[],h=20,m=0;
  while(h<22||(h===22&&m<=15)){
   s.push(`${h>12?h-12:h}:${m.toString().padStart(2,'0')} ${h>=12?'PM':'AM'}`);
@@ -210,90 +225,134 @@ function slotsGen(){
  return s;
 }
 
-function renderSlots(){
- let box=document.getElementById("slots");
- box.innerHTML="";
+async function load(){
+ const snap = await getDocs(collection(db,"bookings"));
+ allBookings = snap.docs.map(d=>d.data());
+ filtered = allBookings;
+}
 
- slotsGen().forEach(t=>{
-  let d=document.createElement("div");
-  d.className="slot";
-  d.textContent=t;
-
-  d.onclick=()=>{
-    document.querySelectorAll(".slot").forEach(x=>x.classList.remove("selected"));
-    d.classList.add("selected");
-    selected=t;
-  };
-
-  box.appendChild(d);
+function renderList(data){
+ els.records.innerHTML="";
+ data.forEach(b=>{
+  const div=document.createElement("div");
+  div.className="slot-btn";
+  div.textContent=`${b.name} | ${b.id} | ${b.time} | ${b.date}`;
+  els.records.appendChild(div);
  });
 }
 
-window.book=async function(){
+function renderSummary(){
+ const map={};
+ allBookings.forEach(b=>{
+  map[b.date]=(map[b.date]||0)+1;
+ });
+ els.summary.innerHTML="";
+ Object.keys(map).forEach(d=>{
+  const div=document.createElement("div");
+  div.textContent=`${d} = ${map[d]} OPK`;
+  els.summary.appendChild(div);
+ });
+}
+
+window.searchBookings=function(){
+ const key=document.getElementById("searchInput").value.toLowerCase();
+
+ filtered = allBookings.filter(b=>
+  (b.name||"").toLowerCase().includes(key) ||
+  (b.id||"").toLowerCase().includes(key) ||
+  (b.date||"").includes(key)
+ );
+
+ renderList(filtered);
+}
+
+window.filterByDate=function(){
+ const d=document.getElementById("filterDate").value;
+ filtered = allBookings.filter(b=>b.date===d);
+ renderList(filtered);
+}
+
+window.resetFilter=function(){
+ filtered = allBookings;
+ renderList(allBookings);
+}
+
+function downloadCSV(){
+ let csv="Name,ID,Level,Agency,Gmail,Date,Time\n";
+ filtered.forEach(b=>{
+  csv+=`${b.name},${b.id},${b.lvl},${b.agency},${b.gmail},${b.date},${b.time}\n`;
+ });
+
+ const blob=new Blob([csv],{type:"text/csv"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;
+ a.download="opk-bookings.csv";
+ a.click();
+}
+
+async function login(){
  try{
-  if(!selected){document.getElementById("err").innerText="Select time first";return;}
-
-  await addDoc(collection(db,"opk"),{
-    name:document.getElementById("name").value||"",
-    bid:document.getElementById("bid").value||"",
-    lvl:document.getElementById("lvl").value||"",
-    agency:document.getElementById("agency").value||"",
-    gmail:document.getElementById("gmail").value||"",
-    date:document.getElementById("date").value||"",
-    time:selected
-  });
-
-  alert("✅ Booking received. THANK YOU");
-  showConfirm();
-
+  await signInWithEmailAndPassword(auth,adminEmail.value,adminPassword.value);
  }catch(e){
-  console.error(e);
-  document.getElementById("err").innerText="Firebase error / permission issue";
+  alert("Login failed");
  }
 }
 
-window.login=function(){
- const pass=document.getElementById("adminPass").value;
- if(pass==="TRD123"){
-  document.getElementById("adminPanel").style.display="block";
-  load();
- }else alert("Wrong password");
+function logout(){signOut(auth)}
+
+onAuthStateChanged(auth,(u)=>{
+ if(u){
+  els.adminPanel.style.display="block";
+  loadAdmin();
+ }else{
+  els.adminPanel.style.display="none";
+ }
+});
+
+async function loadAdmin(){
+ await load();
+ renderList(allBookings);
+ renderSummary();
+ els.total.textContent = allBookings.length;
+
+ const today=new Date().toISOString().split('T')[0];
+ els.today.textContent = allBookings.filter(b=>b.date===today).length;
 }
 
-window.logout=function(){
- document.getElementById("adminPanel").style.display="none";
+date.onchange=render;
+bookBtn.onclick=book;
+loginBtn.onclick=login;
+logoutBtn.onclick=logout;
+
+async function book(){
+ const data={
+  name:name.value.trim(),
+  id:id.value.trim(),
+  lvl:lvl.value.trim(),
+  agency:agency.value.trim(),
+  gmail:gmail.value.trim(),
+  date:date.value,
+  time:selectedTime
+ };
+
+ if(!data.name||!data.id||!data.gmail||!data.date||!data.time){
+  error.textContent="Fill all fields";
+  return;
+ }
+
+ await addDoc(collection(db,"bookings"),data);
+ await load();
+ render();
+ alert("Booked ✅");
 }
 
-async function load(){
- const snap=await getDocs(collection(db,"opk"));
- let box=document.getElementById("list");
- box.innerHTML="";
-
- snap.forEach(d=>{
-  let b=d.data();
-  let div=document.createElement("div");
-  div.style.padding="10px";
-  div.style.marginTop="10px";
-  div.style.background="rgba(255,255,255,0.06)";
-  div.style.borderRadius="10px";
-  div.innerHTML=`<b>${b.name||"N/A"}</b><br>${b.time||""} | ${b.date||""}`;
-  box.appendChild(div);
- });
-}
-
-window.showConfirm=()=>document.getElementById("confirmPage").style.display="flex";
-window.closeConfirm=()=>document.getElementById("confirmPage").style.display="none";
-
-renderSlots();
 </script>
-
-<!-- CONTACT -->
 <div class="footer">
   <h4>📩 For Inquiries</h4>
   <p>📞 09911530204</p>
   <p>📧 CRISNOEL1217@GMAIL.COM</p>
   <p>🎯 BIGO ID: TRD10_28</p>
 </div>
-
 </body>
 </html>
