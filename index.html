@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CN OPK Pro System</title>
+<title>CN OPK PRO DASHBOARD V2</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -15,8 +16,10 @@
   --green:#22c55e;
   --red:#ef4444;
 }
+
 *{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
 body{background:linear-gradient(135deg,#020617,#0a0a12);color:white}
+
 header{
   text-align:center;
   padding:18px;
@@ -27,7 +30,7 @@ header{
   color:transparent;
 }
 
-.container{max-width:1100px;margin:auto;padding:15px}
+.container{max-width:1200px;margin:auto;padding:15px}
 .grid{display:grid;gap:15px}
 @media(min-width:768px){.grid{grid-template-columns:1fr 1fr}}
 
@@ -54,26 +57,27 @@ button{
   cursor:pointer;
 }
 
-/* SLOT UI */
 .slots-grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:8px;
   margin-top:10px;
 }
+
 .slot-btn{
   padding:10px;
   border-radius:10px;
   text-align:center;
   font-size:13px;
   background:rgba(255,255,255,0.08);
-  transition:.2s;
 }
+
 .available{color:var(--green);cursor:pointer}
-.taken{color:var(--red);opacity:.5}
-.selected{border:1px solid var(--accent2);background:rgba(34,211,238,0.2)}
+.taken{color:var(--red);opacity:.6}
+.selected{border:1px solid var(--accent2)}
 
 .admin{display:none}
+
 .error{color:#f87171;font-size:13px;margin-top:6px}
 
 .badge{
@@ -83,19 +87,41 @@ button{
   border-radius:999px;
   font-size:12px;
 }
-.stats{display:flex;justify-content:space-between;margin-top:8px}
+
+.stats{
+  display:flex;
+  justify-content:space-between;
+  margin-top:8px;
+}
+
+.summaryBox{
+  margin-top:10px;
+  padding:10px;
+  border-radius:10px;
+  background:rgba(255,255,255,0.06);
+}
+
+/* footer */
+.footer{
+  margin-top:20px;
+  padding:15px;
+  text-align:center;
+  font-size:13px;
+  opacity:0.9;
+}
 </style>
 </head>
 
 <body>
 
-<header>🔥 CN OPK CLOUD SYSTEM</header>
+<header> CN OPK BOOKING SYSTEM</header>
 
 <div class="container grid">
 
 <!-- BOOKING -->
 <div class="card">
 <h3>📅 Booking</h3>
+
 <input id="name" placeholder="Bigo Name">
 <input id="id" placeholder="Bigo ID">
 <input id="lvl" placeholder="Level">
@@ -114,20 +140,57 @@ button{
 <!-- ADMIN LOGIN -->
 <div class="card">
 <h3>🔐 Admin Login</h3>
+
 <input id="adminEmail" placeholder="Email">
 <input id="adminPassword" type="password" placeholder="Password">
+
 <button id="loginBtn">Login</button>
 <button id="logoutBtn">Logout</button>
+
+<h4 style="margin-top:15px">🔍 Search</h4>
+<input id="searchInput" placeholder="Search name / ID / date">
+<button onclick="searchBookings()">Search</button>
+
+<input id="filterDate" type="date">
+<button onclick="filterByDate()">Filter Date</button>
+<button onclick="resetFilter()">Reset</button>
+
+<div class="summaryBox">
+<h4>📊 OPK Summary</h4>
+<div id="summary"></div>
 </div>
 
-<!-- ADMIN PANEL -->
+</div>
+
+<!-- ADMIN DASHBOARD -->
 <div class="card admin" id="adminPanel">
+
 <h3>📊 Dashboard</h3>
-<div class="stats"><span>Total</span><span id="total" class="badge">0</span></div>
-<div class="stats"><span>Today</span><span id="today" class="badge">0</span></div>
-<div id="records"></div>
+
+<div class="stats">
+<span>Total</span>
+<span id="total" class="badge">0</span>
 </div>
 
+<div class="stats">
+<span>Today</span>
+<span id="today" class="badge">0</span>
+</div>
+
+<button onclick="downloadCSV()">⬇ Download CSV</button>
+
+<h4 style="margin-top:10px">Bookings</h4>
+<div id="records"></div>
+
+</div>
+
+</div>
+
+<!-- FOOTER CONTACT INFO -->
+<div class="footer">
+📞 For more info contact: <b>09911530204</b><br>
+🎯 Bigo ID: <b>TRD10_28</b><br><br>
+<span id="confirmMsg">We will notify you once your booking is confirmed.</span>
 </div>
 
 <script type="module">
@@ -136,153 +199,163 @@ import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.c
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBJBT_BAeos1hb_fKJzSontJVgBub9Wjhc",
-  authDomain: "opk-system-cn.firebaseapp.com",
-  projectId: "opk-system-cn",
-  storageBucket: "opk-system-cn.appspot.com",
-  messagingSenderId: "1098097772017",
-  appId: "1:1098097772017:web:4e015378c786d6b404f050"
+ apiKey: "AIzaSyBJBT_BAeos1hb_fKJzSontJVgBub9Wjhc",
+ authDomain: "opk-system-cn.firebaseapp.com",
+ projectId: "opk-system-cn",
+ storageBucket: "opk-system-cn.appspot.com",
+ messagingSenderId: "1098097772017",
+ appId: "1:1098097772017:web:4e015378c786d6b404f050"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let selectedTime = "";
+let selectedTime="";
+let allBookings=[];
+let filtered=[];
 
-const els = {
-  name: document.getElementById("name"),
-  id: document.getElementById("id"),
-  lvl: document.getElementById("lvl"),
-  agency: document.getElementById("agency"),
-  gmail: document.getElementById("gmail"),
-  date: document.getElementById("date"),
-  slots: document.getElementById("slots"),
-  error: document.getElementById("error"),
-  bookBtn: document.getElementById("bookBtn"),
-  loginBtn: document.getElementById("loginBtn"),
-  logoutBtn: document.getElementById("logoutBtn"),
-  adminPanel: document.getElementById("adminPanel"),
-  records: document.getElementById("records"),
-  total: document.getElementById("total"),
-  today: document.getElementById("today"),
-  adminEmail: document.getElementById("adminEmail"),
-  adminPassword: document.getElementById("adminPassword")
+const els={
+ name:document.getElementById("name"),
+ id:document.getElementById("id"),
+ lvl:document.getElementById("lvl"),
+ agency:document.getElementById("agency"),
+ gmail:document.getElementById("gmail"),
+ date:document.getElementById("date"),
+ slots:document.getElementById("slots"),
+ error:document.getElementById("error"),
+ adminPanel:document.getElementById("adminPanel"),
+ records:document.getElementById("records"),
+ total:document.getElementById("total"),
+ today:document.getElementById("today"),
+ summary:document.getElementById("summary")
 };
 
 function generateSlots(){
- let slots=[],h=20,m=0;
+ let s=[],h=20,m=0;
  while(h<22||(h===22&&m<=15)){
-  slots.push(`${h>12?h-12:h}:${m.toString().padStart(2,'0')} ${h>=12?'PM':'AM'}`);
+  s.push(`${h>12?h-12:h}:${m.toString().padStart(2,'0')} ${h>=12?'PM':'AM'}`);
   m+=15;if(m>=60){m=0;h++}
  }
- return slots;
+ return s;
 }
 
-async function fetchBookings(){
- const snap = await getDocs(collection(db,"bookings"));
- return snap.docs.map(d=>d.data());
+async function load(){
+ const snap=await getDocs(collection(db,"bookings"));
+ allBookings=snap.docs.map(d=>d.data());
+ filtered=allBookings;
 }
 
-async function render(){
- const date = els.date.value;
- els.slots.innerHTML="";
- selectedTime="";
-
- if(!date) return;
-
- const data = await fetchBookings();
- const filtered = data.filter(b=>b.date===date);
-
- generateSlots().forEach(t=>{
-  const taken = filtered.find(b=>b.time===t);
-  const btn=document.createElement("div");
-  btn.className=`slot-btn ${taken?'taken':'available'}`;
-  btn.textContent=t;
-
-  if(!taken){
-    btn.onclick=()=>{
-      selectedTime=t;
-      document.querySelectorAll('.slot-btn').forEach(el=>el.classList.remove('selected'));
-      btn.classList.add('selected');
-      els.error.textContent="";
-    };
-  }
-
-  els.slots.appendChild(btn);
- });
-}
-
-async function book(){
- const data={
-  name: els.name.value.trim(),
-  id: els.id.value.trim(),
-  lvl: els.lvl.value.trim(),
-  agency: els.agency.value.trim(),
-  gmail: els.gmail.value.trim(),
-  date: els.date.value,
-  time: selectedTime
- };
-
- if(!data.name||!data.id||!data.lvl||!data.agency||!data.gmail){
-  els.error.textContent="Fill all fields"; return;
- }
-
- if(!data.date||!data.time){
-  els.error.textContent="Select date & time"; return;
- }
-
- const existing = await fetchBookings();
- if(existing.find(b=>b.date===data.date && b.time===data.time)){
-  els.error.textContent="Slot taken"; return;
- }
-
- await addDoc(collection(db,"bookings"),data);
- alert("Booked ✅");
- render();
-}
-
-async function login(){
- try{
-  await signInWithEmailAndPassword(auth, els.adminEmail.value, els.adminPassword.value);
- }catch(e){
-  alert("Login failed");
- }
-}
-
-function logout(){
- signOut(auth);
-}
-
-onAuthStateChanged(auth,(user)=>{
- if(user){
-  els.adminPanel.style.display='block';
-  loadAdmin();
- }else{
-  els.adminPanel.style.display='none';
- }
-});
-
-async function loadAdmin(){
- const data = await fetchBookings();
+function renderList(data){
  els.records.innerHTML="";
- els.total.innerText=data.length;
-
- const today=new Date().toISOString().split('T')[0];
- els.today.innerText=data.filter(b=>b.date===today).length;
-
  data.forEach(b=>{
   const div=document.createElement("div");
   div.className="slot-btn";
-  div.innerHTML=`${b.name} | ${b.time} | ${b.date}`;
+  div.textContent=`${b.name} | ${b.id} | ${b.time} | ${b.date}`;
   els.records.appendChild(div);
  });
 }
 
-els.date.addEventListener("change",render);
-els.bookBtn.addEventListener("click",book);
-els.loginBtn.addEventListener("click",login);
-els.logoutBtn.addEventListener("click",logout);
+function renderSummary(){
+ const map={};
+ allBookings.forEach(b=>{
+  map[b.date]=(map[b.date]||0)+1;
+ });
+ els.summary.innerHTML="";
+ Object.keys(map).forEach(d=>{
+  const div=document.createElement("div");
+  div.textContent=`${d} = ${map[d]} OPK`;
+  els.summary.appendChild(div);
+ });
+}
+
+window.searchBookings=function(){
+ const key=document.getElementById("searchInput").value.toLowerCase();
+ filtered=allBookings.filter(b=>
+  (b.name||"").toLowerCase().includes(key)||
+  (b.id||"").toLowerCase().includes(key)||
+  (b.date||"").includes(key)
+ );
+ renderList(filtered);
+}
+
+window.filterByDate=function(){
+ const d=document.getElementById("filterDate").value;
+ filtered=allBookings.filter(b=>b.date===d);
+ renderList(filtered);
+}
+
+window.resetFilter=function(){
+ filtered=allBookings;
+ renderList(allBookings);
+}
+
+function downloadCSV(){
+ let csv="Name,ID,Level,Agency,Gmail,Date,Time\n";
+ filtered.forEach(b=>{
+  csv+=`${b.name},${b.id},${b.lvl},${b.agency},${b.gmail},${b.date},${b.time}\n`;
+ });
+ const blob=new Blob([csv],{type:"text/csv"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");
+ a.href=url;
+ a.download="opk-bookings.csv";
+ a.click();
+}
+
+async function login(){
+ try{
+  await signInWithEmailAndPassword(auth,adminEmail.value,adminPassword.value);
+ }catch(e){alert("Login failed");}
+}
+
+function logout(){signOut(auth)}
+
+onAuthStateChanged(auth,(u)=>{
+ if(u){els.adminPanel.style.display="block";loadAdmin();}
+ else{els.adminPanel.style.display="none"}
+});
+
+async function loadAdmin(){
+ await load();
+ renderList(allBookings);
+ renderSummary();
+ els.total.textContent=allBookings.length;
+ const today=new Date().toISOString().split('T')[0];
+ els.today.textContent=allBookings.filter(b=>b.date===today).length;
+}
+
+date.onchange=render;
+bookBtn.onclick=book;
+loginBtn.onclick=login;
+logoutBtn.onclick=logout;
+
+async function book(){
+ const data={
+  name:name.value.trim(),
+  id:id.value.trim(),
+  lvl:lvl.value.trim(),
+  agency:agency.value.trim(),
+  gmail:gmail.value.trim(),
+  date:date.value,
+  time:selectedTime
+ };
+
+ if(!data.name||!data.id||!data.gmail||!data.date||!data.time){
+  error.textContent="Fill all fields";
+  return;
+ }
+
+ await addDoc(collection(db,"bookings"),data);
+ await load();
+ render();
+
+ // CONFIRMATION MESSAGE
+ document.getElementById("confirmMsg").innerText =
+ "✅ We have received your booking. Please wait for admin confirmation.";
+
+ alert("Booked Successfully ✅");
+}
 
 </script>
 
