@@ -195,12 +195,13 @@ button{
 </div>
 
 <script type="module">
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
- apiKey: "AIzaSyBJBT_BAeos1hb_fKJzSontJVgBub9Wjhc",
+apiKey: "AIzaSyBJBT_BAeos1hb_fKJzSontJVgBub9Wjhc",
  authDomain: "opk-system-cn.firebaseapp.com",
  projectId: "opk-system-cn",
  storageBucket: "opk-system-cn.appspot.com",
@@ -215,8 +216,14 @@ const auth = getAuth(app);
 let selectedTime = "";
 let allBookings = [];
 
+/* ELEMENTS */
 const slots = document.getElementById("slots");
+const adminPanel = document.getElementById("adminPanel");
+const records = document.getElementById("records");
+const total = document.getElementById("total");
+const today = document.getElementById("today");
 
+/* FIXED SLOT SYSTEM */
 function generateSlots(){
  let s=[],h=20,m=0;
  while(h<22||(h===22&&m<=15)){
@@ -225,6 +232,103 @@ function generateSlots(){
  }
  return s;
 }
+
+function renderSlots(){
+ slots.innerHTML="";
+
+ generateSlots().forEach(t=>{
+  const d=document.createElement("div");
+  d.className="slot-btn";
+  d.textContent=t;
+
+  d.onclick=()=>{
+    document.querySelectorAll(".slot-btn")
+      .forEach(x=>x.classList.remove("selected"));
+
+    d.classList.add("selected");
+    selectedTime = t;
+  };
+
+  slots.appendChild(d);
+ });
+}
+
+/* BOOKING FIXED */
+window.book = async function(){
+
+ const name = document.getElementById("name").value.trim();
+ const id = document.getElementById("id").value.trim();
+ const lvl = document.getElementById("lvl").value.trim();
+ const agency = document.getElementById("agency").value.trim();
+ const gmail = document.getElementById("gmail").value.trim();
+ const date = document.getElementById("date").value;
+
+ if(!name || !id || !gmail || !date){
+  alert("❌ Please complete all fields");
+  return;
+ }
+
+ if(!selectedTime){
+  alert("❌ Please select a time slot");
+  return;
+ }
+
+ try{
+  await addDoc(collection(db,"bookings"),{
+    name,id,lvl,agency,gmail,date,time:selectedTime
+  });
+
+  alert("✅ Booking Successful!");
+  location.reload();
+
+ }catch(e){
+  console.error(e);
+  alert("❌ Firebase error (check rules)");
+ }
+}
+
+/* ADMIN LOGIN FIXED */
+const adminEmail = document.getElementById("adminEmail");
+const adminPassword = document.getElementById("adminPassword");
+
+window.login = async function(){
+ try{
+  await signInWithEmailAndPassword(auth,adminEmail.value,adminPassword.value);
+ }catch(e){
+  alert("❌ Login Failed");
+ }
+}
+
+window.logout = function(){
+ signOut(auth);
+}
+
+/* AUTH STATE */
+onAuthStateChanged(auth,async(user)=>{
+ if(user){
+  adminPanel.style.display="block";
+
+  const snap = await getDocs(collection(db,"bookings"));
+  records.innerHTML="";
+
+  snap.forEach(d=>{
+    let b=d.data();
+    records.innerHTML += `
+      <div class="slot-btn">
+        ${b.name} | ${b.time} | ${b.date}
+      </div>`;
+  });
+
+  total.innerText = snap.size;
+ }
+ else{
+  adminPanel.style.display="none";
+ }
+});
+
+/* INIT */
+renderSlots();
+</script>
 
 function renderSlots(){
  slots.innerHTML="";
