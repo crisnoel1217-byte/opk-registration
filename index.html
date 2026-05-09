@@ -1,4 +1,3 @@
-
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -32,7 +31,7 @@ body::before{
 }
 
 .container{
-  max-width:1200px;
+  max-width:1400px;
   margin:auto;
   padding:25px;
 }
@@ -85,7 +84,7 @@ body::before{
 
 .grid{
   display:grid;
-  grid-template-columns:2fr 1fr;
+  grid-template-columns:2fr 1.2fr;
   gap:25px;
 }
 
@@ -217,6 +216,84 @@ input:focus{
   color:#6b7280;
 }
 
+/* NEW LARGE ADMIN PANEL STYLES */
+.admin-panel-large {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(34, 211, 238, 0.1));
+  border: 2px solid #22d3ee;
+  border-radius: 35px;
+  padding: 35px;
+  box-shadow: 0 0 50px rgba(34, 211, 238, 0.3);
+  backdrop-filter: blur(20px);
+  margin-top: 25px;
+}
+
+.admin-panel-title {
+  font-size: 36px;
+  font-weight: 900;
+  background: linear-gradient(90deg, #a855f7, #22d3ee, #ec4899);
+  -webkit-background-clip: text;
+  color: transparent;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.bigo-search-container {
+  background: rgba(0,0,0,0.4);
+  border: 2px solid #22d3ee;
+  border-radius: 25px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.bigo-search-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #22d3ee;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+#bigoSearchInput {
+  font-size: 20px;
+  padding: 22px 25px;
+  background: rgba(0,0,0,0.5);
+  border: 2px solid rgba(34, 211, 238, 0.3);
+  border-radius: 25px;
+  color: white;
+  width: 100%;
+}
+
+#bigoSearchInput:focus {
+  border-color: #22d3ee;
+  box-shadow: 0 0 25px rgba(34, 211, 238, 0.5);
+  transform: scale(1.02);
+}
+
+.search-results {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 20px;
+  max-height: 400px;
+  overflow: auto;
+}
+
+.search-result {
+  background: rgba(34, 211, 238, 0.1);
+  padding: 20px;
+  border-radius: 20px;
+  margin-bottom: 15px;
+  border-left: 5px solid #22d3ee;
+}
+
+.admin-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
 @media(max-width:900px){
   .grid{
     grid-template-columns:1fr;
@@ -232,6 +309,14 @@ input:focus{
 
   .input-grid{
     grid-template-columns:1fr;
+  }
+
+  .admin-panel-large {
+    grid-column: 1;
+  }
+
+  .admin-controls {
+    grid-template-columns: 1fr;
   }
 }
 </style>
@@ -346,6 +431,28 @@ Delete All Bookings
 </div>
 </div>
 
+<!-- 🚀 NEW LARGE ADMIN PANEL -->
+<div class="admin-panel-large" id="largeAdminPanel" style="display:none;">
+  <h2 class="admin-panel-title">⚡ PRO ADMIN CONTROL CENTER</h2>
+  
+  <!-- BIGO ID SEARCH BAR -->
+  <div class="bigo-search-container">
+    <div class="bigo-search-title">🔍 Search Bigo ID Instantly</div>
+    <input type="text" id="bigoSearchInput" placeholder="Enter Bigo ID to search... (Press Enter)">
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <!-- QUICK CONTROLS -->
+  <div class="admin-controls">
+    <button class="login-btn" id="quickRefreshBtn" style="font-size:18px;padding:22px;">
+      🔄 Refresh Data
+    </button>
+    <button class="logout-btn" id="quickExportBtn" style="font-size:18px;padding:22px;">
+      📊 Quick Export
+    </button>
+  </div>
+</div>
+
 <div class="footer">
 CN OPK PRO DASHBOARD © 2026
 </div>
@@ -389,6 +496,9 @@ const auth = getAuth(app);
 const slotsContainer = document.getElementById("slots");
 const records = document.getElementById("records");
 const adminDashboard = document.getElementById("adminDashboard");
+const largeAdminPanel = document.getElementById("largeAdminPanel");
+const bigoSearchInput = document.getElementById("bigoSearchInput");
+const searchResults = document.getElementById("searchResults");
 
 const totalBookings = document.getElementById("totalBookings");
 const todayBookings = document.getElementById("todayBookings");
@@ -403,43 +513,28 @@ const slots = [
 ];
 
 function renderSlots(){
-
   slotsContainer.innerHTML = "";
-
   slots.forEach(slot => {
-
     const btn = document.createElement("button");
-
     btn.className = "slot-btn";
     btn.innerText = slot;
-
     btn.onclick = () => {
-
       document.querySelectorAll(".slot-btn")
       .forEach(x => x.classList.remove("selected"));
-
       btn.classList.add("selected");
       selectedSlot = slot;
     }
-
     slotsContainer.appendChild(btn);
   })
 }
 
 async function loadBookings(){
-
   const snap = await getDocs(collection(db,"bookings"));
-
   bookings = [];
-
   records.innerHTML = "";
-
   snap.forEach(doc => {
-
     const data = doc.data();
-
     bookings.push(data);
-
     records.innerHTML += `
 <div class="record">
 <div style="display:flex;justify-content:space-between;gap:15px;align-items:flex-start;">
@@ -452,7 +547,6 @@ async function loadBookings(){
 🕒 ${data.slot}<br>
 📅 ${data.date}
 </div>
-
 <button onclick="window.deleteBooking('${doc.id}')"
 style="background:#ef4444;border:none;padding:10px 14px;border-radius:12px;color:white;font-weight:700;cursor:pointer;">
 Delete
@@ -461,20 +555,15 @@ Delete
 </div>
 `;
   })
-
   totalBookings.innerText = bookings.length;
-
   const today = new Date().toISOString().split("T")[0];
-
   const todayCount = bookings.filter(
     x => x.date === today
   ).length;
-
   todayBookings.innerText = todayCount;
 }
 
 async function bookSlot(){
-
   const booking = {
     name:document.getElementById("name").value,
     bigoId:document.getElementById("bigoId").value,
@@ -484,7 +573,6 @@ async function bookSlot(){
     date:document.getElementById("date").value,
     slot:selectedSlot
   };
-
   if(
     !booking.name ||
     !booking.bigoId ||
@@ -497,41 +585,30 @@ async function bookSlot(){
     alert("Complete all fields");
     return;
   }
-
   const alreadyBooked = bookings.find(
     x => x.date === booking.date &&
     x.slot === booking.slot
   );
-
   if(alreadyBooked){
     alert("Time slot already booked");
     return;
   }
-
   await addDoc(collection(db,"bookings"),booking);
-
   alert("Booking Successful 🚀");
-
   location.reload();
 }
 
 async function login(){
-
   const email = document.getElementById("adminEmail").value;
   const password = document.getElementById("adminPassword").value;
-
   try{
-
     await signInWithEmailAndPassword(
       auth,
       email,
       password
     );
-
     alert("Admin Login Success");
-
   }catch(err){
-
     alert("Login Failed");
   }
 }
@@ -539,41 +616,30 @@ async function login(){
 async function logout(){
   await signOut(auth);
   adminDashboard.style.display = 'none';
+  largeAdminPanel.style.display = 'none';
   alert("Logged Out");
 }
 
 window.deleteBooking = async function(id){
-
   const confirmDelete = confirm("Delete this booking?");
-
   if(!confirmDelete) return;
-
   await deleteDoc(doc(db,"bookings",id));
-
   alert("Booking Deleted");
-
   loadBookings();
 }
 
 async function clearAllBookings(){
-
   const confirmDelete = confirm("Delete ALL bookings?");
-
   if(!confirmDelete) return;
-
   const snap = await getDocs(collection(db,"bookings"));
-
   for(const item of snap.docs){
     await deleteDoc(doc(db,"bookings",item.id));
   }
-
   alert("All bookings deleted");
-
   loadBookings();
 }
 
 function downloadExcel(){
-
   const exportData = bookings.map(x => ({
     Name:x.name,
     BigoID:x.bigoId,
@@ -583,14 +649,46 @@ function downloadExcel(){
     Date:x.date,
     Time:x.slot
   }));
-
   const worksheet = XLSX.utils.json_to_sheet(exportData);
-
   const workbook = XLSX.utils.book_new();
-
   XLSX.utils.book_append_sheet(workbook,worksheet,"Bookings");
-
   XLSX.writeFile(workbook,"CN_OPK_BOOKINGS.xlsx");
+}
+
+// 🔥 NEW BIGO ID SEARCH FUNCTIONALITY
+async function searchBigoId() {
+  const searchTerm = bigoSearchInput.value.toLowerCase().trim();
+  if (!searchTerm) {
+    searchResults.innerHTML = '<div style="color:#9ca3af;text-align:center;padding:20px;">Enter Bigo ID to search...</div>';
+    return;
+  }
+
+  searchResults.innerHTML = '<div style="color:#22d3ee;text-align:center;padding:20px;">🔍 Searching...</div>';
+
+  const matchingBookings = bookings.filter(booking => 
+    booking.bigoId.toLowerCase().includes(searchTerm)
+  );
+
+  setTimeout(() => {
+    if (matchingBookings.length === 0) {
+      searchResults.innerHTML = `
+        <div style="color:#9ca3af;text-align:center;padding:30px;">
+          <div style="font-size:28px;margin-bottom:10px;">❌</div>
+          No bookings found for Bigo ID: <strong>${searchTerm}</strong>
+        </div>
+      `;
+    } else {
+      searchResults.innerHTML = matchingBookings.map(booking => `
+        <div class="search-result">
+          <div><strong>👤 ${booking.name}</strong></div>
+          <div>🆔 <strong>${booking.bigoId}</strong></div>
+          <div>🏢 ${booking.agency} | ⭐ ${booking.level}</div>
+          <div>📧 ${booking.gmail}</div>
+          <div>📅 ${booking.date} | 🕒 ${booking.slot}</div>
+        </div>
+      `).join('');
+    }
+  }, 500);
 }
 
 document.getElementById("bookBtn")
@@ -608,14 +706,25 @@ document.getElementById("downloadExcelBtn")
 document.getElementById("clearBookingsBtn")
 .addEventListener("click",clearAllBookings);
 
-onAuthStateChanged(auth,(user)=>{
+// NEW EVENT LISTENERS FOR LARGE ADMIN PANEL
+document.getElementById("quickRefreshBtn").addEventListener("click", loadBookings);
+document.getElementById("quickExportBtn").addEventListener("click", downloadExcel);
 
+bigoSearchInput.addEventListener("keypress", function(e) {
+  if (e.key === "Enter") {
+    searchBigoId();
+  }
+});
+
+onAuthStateChanged(auth,(user)=>{
   if(user){
     adminDashboard.style.display = 'block';
-    console.log("Admin Online");
+    largeAdminPanel.style.display = 'block';
+    console.log("Admin Online - Large Panel Active");
   }
   else{
     adminDashboard.style.display = 'none';
+    largeAdminPanel.style.display = 'none';
     console.log("Guest Mode");
   }
 })
@@ -631,24 +740,6 @@ loadBookings();
   <p style="color:#9ca3af;">📧 CRISNOEL1217@GMAIL.COM</p>
   <p style="color:#9ca3af;">🎯 BIGO ID: TRD10_28</p>
 </div>
-  <!-- SUCCESS SCREEN -->
-<div class="success-overlay" id="successOverlay">
-  <div class="success-box">
-   
-<script>
-function showSuccess(){
-  const el = document.getElementById('successOverlay');
-  el.style.display = 'flex';
-
-  setTimeout(()=>{
-    el.style.display = 'none';
-  },2500);
-}
-</script>
 
 </body>
 </html>
-
-</body>
-</html>
-
