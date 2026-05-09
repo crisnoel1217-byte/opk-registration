@@ -1,9 +1,8 @@
-
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>CN OPK Booking Portal</title>
+<title>CN OPK Booking Portal | Admin Pro</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
@@ -19,6 +18,8 @@ body{
   background:#030712;
   color:white;
   overflow-x:hidden;
+  font-size:16px;
+  line-height:1.6;
 }
 
 body::before{
@@ -26,37 +27,39 @@ body::before{
   position:fixed;
   inset:0;
   background:
-  radial-gradient(circle at top right,#7c3aed55,transparent 30%),
-  radial-gradient(circle at bottom left,#06b6d455,transparent 30%);
+  radial-gradient(circle at top right,#7c3aed55,transparent 40%),
+  radial-gradient(circle at bottom left,#06b6d455,transparent 40%);
   z-index:-1;
 }
 
 .container{
-  max-width:1200px;
+  max-width:1600px;
   margin:auto;
-  padding:25px;
+  padding:40px 30px;
 }
 
 .header{
   text-align:center;
-  margin-bottom:40px;
+  margin-bottom:60px;
 }
 
 .badge{
   display:inline-flex;
   align-items:center;
-  gap:10px;
+  gap:12px;
   background:rgba(255,255,255,0.08);
   border:1px solid rgba(255,255,255,0.08);
-  padding:12px 22px;
+  padding:16px 32px;
   border-radius:999px;
   backdrop-filter:blur(12px);
-  margin-bottom:20px;
+  margin-bottom:24px;
+  font-size:18px;
+  font-weight:600;
 }
 
 .dot{
-  width:10px;
-  height:10px;
+  width:12px;
+  height:12px;
   border-radius:50%;
   background:#22d3ee;
   animation:pulse 1.5s infinite;
@@ -69,55 +72,64 @@ body::before{
 }
 
 .title{
-  font-size:70px;
+  font-size:86px;
   font-weight:900;
-  line-height:1;
+  line-height:1.1;
   background:linear-gradient(90deg,#a855f7,#22d3ee,#ec4899);
   -webkit-background-clip:text;
   color:transparent;
+  margin-bottom:16px;
 }
 
 .subtitle{
   color:#9ca3af;
-  margin-top:20px;
-  font-size:18px;
+  font-size:22px;
+  max-width:900px;
+  margin:0 auto;
 }
 
 .grid{
   display:grid;
-  grid-template-columns:2fr 1fr;
-  gap:25px;
+  grid-template-columns:2.2fr 1fr;
+  gap:35px;
+  align-items:start;
 }
 
 .card{
   background:rgba(255,255,255,0.06);
   border:1px solid rgba(255,255,255,0.08);
-  border-radius:30px;
-  backdrop-filter:blur(16px);
-  padding:25px;
-  box-shadow:0 0 30px rgba(0,0,0,0.25);
+  border-radius:36px;
+  backdrop-filter:blur(20px);
+  padding:40px;
+  box-shadow:0 8px 40px rgba(0,0,0,0.3);
+  transition:transform 0.3s ease;
+}
+
+.card:hover{
+  transform:translateY(-4px);
 }
 
 .input-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:15px;
+  gap:20px;
 }
 
 input{
   width:100%;
   background:rgba(0,0,0,0.35);
   border:1px solid rgba(255,255,255,0.08);
-  border-radius:18px;
-  padding:16px;
+  border-radius:20px;
+  padding:20px 24px;
   color:white;
+  font-size:17px;
   outline:none;
   transition:0.3s;
 }
 
 input:focus{
   border-color:#22d3ee;
-  box-shadow:0 0 15px rgba(34,211,238,0.3);
+  box-shadow:0 0 20px rgba(34,211,238,0.3);
 }
 
 .full{
@@ -127,23 +139,24 @@ input:focus{
 .slots{
   display:grid;
   grid-template-columns:repeat(5,1fr);
-  gap:12px;
-  margin-top:20px;
+  gap:15px;
+  margin-top:24px;
 }
 
 .slot-btn{
   background:rgba(255,255,255,0.05);
   border:1px solid rgba(255,255,255,0.08);
-  border-radius:18px;
-  padding:18px 10px;
+  border-radius:20px;
+  padding:22px 12px;
   color:white;
   cursor:pointer;
   transition:0.3s;
   font-weight:700;
+  font-size:16px;
 }
 
 .slot-btn:hover{
-  transform:translateY(-3px) scale(1.03);
+  transform:translateY(-3px) scale(1.04);
   border-color:#22d3ee;
   background:rgba(34,211,238,0.15);
 }
@@ -155,14 +168,15 @@ input:focus{
 
 .book-btn,
 .login-btn,
-.logout-btn{
+.logout-btn,
+.admin-btn{
   width:100%;
   border:none;
-  margin-top:20px;
-  padding:18px;
-  border-radius:20px;
+  margin-top:24px;
+  padding:20px;
+  border-radius:24px;
   font-weight:800;
-  font-size:16px;
+  font-size:17px;
   cursor:pointer;
   transition:0.3s;
   color:black;
@@ -171,67 +185,117 @@ input:focus{
 
 .book-btn:hover,
 .login-btn:hover,
-.logout-btn:hover{
-  transform:scale(1.02);
+.logout-btn:hover,
+.admin-btn:hover{
+  transform:scale(1.03);
+  box-shadow:0 6px 20px rgba(34,211,238,0.25);
 }
 
 .sidebar{
   display:flex;
   flex-direction:column;
-  gap:25px;
+  gap:35px;
 }
 
 .stat-box{
   background:rgba(0,0,0,0.3);
   border-radius:20px;
-  padding:20px;
+  padding:24px 28px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-top:15px;
+  margin-top:18px;
+  font-size:18px;
 }
 
 .stat-number{
-  font-size:34px;
+  font-size:42px;
   font-weight:900;
+  color:#22d3ee;
 }
 
 .records{
-  margin-top:20px;
+  margin-top:24px;
   display:flex;
   flex-direction:column;
-  gap:10px;
-  max-height:300px;
-  overflow:auto;
+  gap:14px;
+  max-height:500px;
+  overflow-y:auto;
+  padding-right:8px;
+}
+
+.records::-webkit-scrollbar{
+  width:8px;
+}
+.records::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,0.2);
+  border-radius:10px;
 }
 
 .record{
   background:rgba(255,255,255,0.05);
-  padding:15px;
-  border-radius:18px;
+  padding:20px 24px;
+  border-radius:20px;
+  font-size:16px;
 }
 
 .footer{
-  margin-top:40px;
+  margin-top:60px;
   text-align:center;
   color:#6b7280;
+  font-size:17px;
 }
 
-@media(max-width:900px){
+.success-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  backdrop-filter:blur(10px);
+  z-index:999;
+  align-items:center;
+  justify-content:center;
+}
+
+.success-box{
+  background:#0f172a;
+  border:1px solid #22d3ee;
+  border-radius:30px;
+  padding:50px 60px;
+  text-align:center;
+  box-shadow:0 0 40px #22d3ee40;
+}
+
+.success-box h1{
+  font-size:48px;
+  color:#22d3ee;
+  margin-bottom:16px;
+}
+
+@media(max-width:1200px){
   .grid{
     grid-template-columns:1fr;
   }
-
   .title{
-    font-size:50px;
+    font-size:64px;
   }
+}
 
+@media(max-width:768px){
+  .title{
+    font-size:48px;
+  }
   .slots{
     grid-template-columns:repeat(2,1fr);
   }
-
   .input-grid{
     grid-template-columns:1fr;
+  }
+  .container{
+    padding:20px;
+  }
+  .card{
+    padding:24px;
   }
 }
 </style>
@@ -244,7 +308,7 @@ input:focus{
 <div class="header">
   <div class="badge">
     <div class="dot"></div>
-    <span>CN OPK BOOKING SYSTEM</span>
+    <span>CN OPK BOOKING SYSTEM | ADMIN PRO</span>
   </div>
 
   <h1 class="title">
@@ -253,20 +317,18 @@ input:focus{
   </h1>
 
   <p class="subtitle">
-    Premium futuristic OPK reservation dashboard.
+    Premium futuristic OPK reservation dashboard — fully scalable, professional, and built for management.
   </p>
 </div>
 
 <div class="grid">
 
 <div class="card">
-
-<h2 style="font-size:30px;font-weight:800;margin-bottom:10px">
+<h2 style="font-size:34px;font-weight:800;margin-bottom:12px;">
 Reserve Your Slot 🚀
 </h2>
-
-<p style="color:#9ca3af;margin-bottom:25px">
-Choose your preferred OPK schedule.
+<p style="color:#9ca3af;margin-bottom:30px;font-size:18px;">
+Complete the details below and choose your preferred schedule.
 </p>
 
 <div class="input-grid">
@@ -274,70 +336,62 @@ Choose your preferred OPK schedule.
 <input id="bigoId" placeholder="Bigo ID">
 <input id="agency" placeholder="Agency">
 <input id="level" placeholder="Level">
-<input id="gmail" class="full" placeholder="Gmail">
+<input id="gmail" class="full" placeholder="Gmail Address">
 <input id="date" type="date" class="full">
 </div>
 
-<h3 style="margin-top:30px;font-size:22px">
-Select Time
-</h3>
+<h3 style="margin-top:36px;font-size:24px;">Select Time Slot</h3>
 
 <div class="slots" id="slots"></div>
 
-<button class="book-btn" id="bookBtn">
+<button class="book-btn" id="bookBtn" onclick="showSuccess()">
 Reserve Now
 </button>
-
 </div>
 
 <div class="sidebar">
 
 <div class="card">
-<h2 style="font-size:28px;font-weight:800;margin-bottom:20px">
-Admin Login
+<h2 style="font-size:30px;font-weight:800;margin-bottom:24px;">
+🔐 Admin Login
 </h2>
-
 <input id="adminEmail" placeholder="Admin Email">
-<input id="adminPassword" type="password" placeholder="Password" style="margin-top:15px">
+<input id="adminPassword" type="password" placeholder="Password" style="margin-top:18px;">
 
 <button class="login-btn" id="loginBtn">
-Login
+Sign In
 </button>
-
 <button class="logout-btn" id="logoutBtn">
-Logout
+Sign Out
 </button>
 </div>
 
 <div class="card">
-<h2 style="font-size:28px;font-weight:800">
-Live Stats
+<h2 style="font-size:30px;font-weight:800;">
+📊 Live Statistics
 </h2>
-
 <div class="stat-box">
-<span>Total Bookings</span>
-<span class="stat-number" id="totalBookings">0</span>
+  <span>Total Bookings</span>
+  <span class="stat-number" id="totalBookings">0</span>
 </div>
-
 <div class="stat-box">
-<span>Today</span>
-<span class="stat-number" id="todayBookings">0</span>
+  <span>Today's Bookings</span>
+  <span class="stat-number" id="todayBookings">0</span>
 </div>
 </div>
 
 <div class="card" id="adminDashboard" style="display:none;">
-<h2 style="font-size:28px;font-weight:800;margin-bottom:15px">
-Professional Admin Dashboard
+<h2 style="font-size:30px;font-weight:800;margin-bottom:20px;">
+⚙️ Professional Admin Panel
 </h2>
 
-<div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;">
-<button class="login-btn" id="downloadExcelBtn" style="margin-top:0;flex:1;min-width:180px;">
-Download Excel Report
-</button>
-
-<button class="logout-btn" id="clearBookingsBtn" style="margin-top:0;flex:1;min-width:180px;">
-Delete All Bookings
-</button>
+<div style="display:flex;gap:14px;margin-bottom:24px;flex-wrap:wrap;">
+  <button class="admin-btn" id="downloadExcelBtn" style="flex:1;min-width:200px;">
+    📥 Download Excel Report
+  </button>
+  <button class="admin-btn" id="clearBookingsBtn" style="flex:1;min-width:200px;background:linear-gradient(90deg,#ef4444,#f97316);">
+    🗑️ Delete All Bookings
+  </button>
 </div>
 
 <div class="records" id="records"></div>
@@ -346,31 +400,34 @@ Delete All Bookings
 </div>
 </div>
 
-<div class="footer">
-CN OPK PRO DASHBOARD © 2026
+<div class="card" style="max-width:1000px;margin:40px auto;text-align:center;">
+  <h2 style="font-size:28px;font-weight:800;margin-bottom:12px;">📩 Contact & Support</h2>
+  <p style="color:#9ca3af;font-size:18px;">📞 09911530204 &nbsp;&nbsp; | &nbsp;&nbsp; 📧 CRISNOEL1217@GMAIL.COM &nbsp;&nbsp; | &nbsp;&nbsp; 🎯 BIGO ID: TRD10_28</p>
 </div>
 
+<div class="footer">
+  CN OPK PRO ADMIN DASHBOARD © 2026 — All Rights Reserved
+</div>
+
+</div>
+
+<div class="success-overlay" id="successOverlay">
+  <div class="success-box">
+    <h1>🎉 BOOKED!</h1>
+    <p>Your reservation has been successfully recorded.</p>
+    <p style="margin-top:10px;font-size:14px;opacity:0.8;">See you at your schedule 🚀</p>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  deleteDoc,
-  doc
+  getFirestore, collection, addDoc, getDocs, deleteDoc, doc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
 import {
-  getAuth,
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
+  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -389,7 +446,6 @@ const auth = getAuth(app);
 const slotsContainer = document.getElementById("slots");
 const records = document.getElementById("records");
 const adminDashboard = document.getElementById("adminDashboard");
-
 const totalBookings = document.getElementById("totalBookings");
 const todayBookings = document.getElementById("todayBookings");
 
@@ -403,256 +459,30 @@ const slots = [
 ];
 
 function renderSlots(){
-
   slotsContainer.innerHTML = "";
-
   slots.forEach(slot => {
-
     const btn = document.createElement("button");
-
     btn.className = "slot-btn";
     btn.innerText = slot;
-
     btn.onclick = () => {
-
-      document.querySelectorAll(".slot-btn")
-      .forEach(x => x.classList.remove("selected"));
-
+      document.querySelectorAll(".slot-btn").forEach(x => x.classList.remove("selected"));
       btn.classList.add("selected");
       selectedSlot = slot;
-    }
-
+    };
     slotsContainer.appendChild(btn);
   })
 }
 
 async function loadBookings(){
-
   const snap = await getDocs(collection(db,"bookings"));
-
   bookings = [];
-
   records.innerHTML = "";
-
   snap.forEach(doc => {
-
     const data = doc.data();
-
     bookings.push(data);
-
     records.innerHTML += `
 <div class="record">
-<div style="display:flex;justify-content:space-between;gap:15px;align-items:flex-start;">
-<div>
-<strong>${data.name}</strong><br>
-🆔 ${data.bigoId}<br>
-🏢 ${data.agency}<br>
-⭐ ${data.level}<br>
-📧 ${data.gmail}<br>
-🕒 ${data.slot}<br>
-📅 ${data.date}
-</div>
-
-<button onclick="window.deleteBooking('${doc.id}')"
-style="background:#ef4444;border:none;padding:10px 14px;border-radius:12px;color:white;font-weight:700;cursor:pointer;">
-Delete
-</button>
-</div>
-</div>
-`;
-  })
-
-  totalBookings.innerText = bookings.length;
-
-  const today = new Date().toISOString().split("T")[0];
-
-  const todayCount = bookings.filter(
-    x => x.date === today
-  ).length;
-
-  todayBookings.innerText = todayCount;
-}
-
-async function bookSlot(){
-
-  const booking = {
-    name:document.getElementById("name").value,
-    bigoId:document.getElementById("bigoId").value,
-    agency:document.getElementById("agency").value,
-    level:document.getElementById("level").value,
-    gmail:document.getElementById("gmail").value,
-    date:document.getElementById("date").value,
-    slot:selectedSlot
-  };
-
-  if(
-    !booking.name ||
-    !booking.bigoId ||
-    !booking.agency ||
-    !booking.level ||
-    !booking.gmail ||
-    !booking.date ||
-    !booking.slot
-  ){
-    alert("Complete all fields");
-    return;
-  }
-
-  const alreadyBooked = bookings.find(
-    x => x.date === booking.date &&
-    x.slot === booking.slot
-  );
-
-  if(alreadyBooked){
-    alert("Time slot already booked");
-    return;
-  }
-
-  await addDoc(collection(db,"bookings"),booking);
-
-  alert("Booking Successful 🚀");
-
-  location.reload();
-}
-
-async function login(){
-
-  const email = document.getElementById("adminEmail").value;
-  const password = document.getElementById("adminPassword").value;
-
-  try{
-
-    await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-
-    alert("Admin Login Success");
-
-  }catch(err){
-
-    alert("Login Failed");
-  }
-}
-
-async function logout(){
-  await signOut(auth);
-  adminDashboard.style.display = 'none';
-  alert("Logged Out");
-}
-
-window.deleteBooking = async function(id){
-
-  const confirmDelete = confirm("Delete this booking?");
-
-  if(!confirmDelete) return;
-
-  await deleteDoc(doc(db,"bookings",id));
-
-  alert("Booking Deleted");
-
-  loadBookings();
-}
-
-async function clearAllBookings(){
-
-  const confirmDelete = confirm("Delete ALL bookings?");
-
-  if(!confirmDelete) return;
-
-  const snap = await getDocs(collection(db,"bookings"));
-
-  for(const item of snap.docs){
-    await deleteDoc(doc(db,"bookings",item.id));
-  }
-
-  alert("All bookings deleted");
-
-  loadBookings();
-}
-
-function downloadExcel(){
-
-  const exportData = bookings.map(x => ({
-    Name:x.name,
-    BigoID:x.bigoId,
-    Agency:x.agency,
-    Level:x.level,
-    Gmail:x.gmail,
-    Date:x.date,
-    Time:x.slot
-  }));
-
-  const worksheet = XLSX.utils.json_to_sheet(exportData);
-
-  const workbook = XLSX.utils.book_new();
-
-  XLSX.utils.book_append_sheet(workbook,worksheet,"Bookings");
-
-  XLSX.writeFile(workbook,"CN_OPK_BOOKINGS.xlsx");
-}
-
-document.getElementById("bookBtn")
-.addEventListener("click",bookSlot);
-
-document.getElementById("loginBtn")
-.addEventListener("click",login);
-
-document.getElementById("logoutBtn")
-.addEventListener("click",logout);
-
-document.getElementById("downloadExcelBtn")
-.addEventListener("click",downloadExcel);
-
-document.getElementById("clearBookingsBtn")
-.addEventListener("click",clearAllBookings);
-
-onAuthStateChanged(auth,(user)=>{
-
-  if(user){
-    adminDashboard.style.display = 'block';
-    console.log("Admin Online");
-  }
-  else{
-    adminDashboard.style.display = 'none';
-    console.log("Guest Mode");
-  }
-})
-
-renderSlots();
-loadBookings();
-
-</script>
-  <!-- CONTACT INQUIRIES -->
-<div class="card" style="max-width:900px;margin:30px auto;text-align:center;">
-  <h2 style="font-size:26px;font-weight:800;margin-bottom:10px;">📩 For Inquiries</h2>
-  <p style="color:#9ca3af;">📞 09911530204</p>
-  <p style="color:#9ca3af;">📧 CRISNOEL1217@GMAIL.COM</p>
-  <p style="color:#9ca3af;">🎯 BIGO ID: TRD10_28</p>
-</div>
-  <!-- SUCCESS SCREEN -->
-<div class="success-overlay" id="successOverlay">
-  <div class="success-box">
-    <h1>🎉 BOOKED!</h1>
-    <p>Your reservation is confirmed</p>
-    <p style="margin-top:10px;font-size:12px;opacity:0.8">See you on your schedule 🚀</p>
-  </div>
-</div>
-<script>
-function showSuccess(){
-  const el = document.getElementById('successOverlay');
-  el.style.display = 'flex';
-
-  setTimeout(()=>{
-    el.style.display = 'none';
-  },2500);
-}
-</script>
-
-</body>
-</html>
-
-</body>
-</html>
-
+  <div style="display:flex;justify-content:space-between;gap:15px;align-items:flex-start;">
+    <div>
+      <strong style="font-size:17px;">${data.name}</strong><br>
+      🆔 ${data.bigoId} &nbsp;&nbsp; 🏢 ${data.agency} &nbsp;&nbsp;
