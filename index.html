@@ -325,10 +325,20 @@ Live Stats
 </div>
 </div>
 
-<div class="card">
+<div class="card" id="adminDashboard" style="display:none;">
 <h2 style="font-size:28px;font-weight:800;margin-bottom:15px">
-Bookings
+Professional Admin Dashboard
 </h2>
+
+<div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;">
+<button class="login-btn" id="downloadExcelBtn" style="margin-top:0;flex:1;min-width:180px;">
+Download Excel Report
+</button>
+
+<button class="logout-btn" id="clearBookingsBtn" style="margin-top:0;flex:1;min-width:180px;">
+Delete All Bookings
+</button>
+</div>
 
 <div class="records" id="records"></div>
 </div>
@@ -342,6 +352,8 @@ CN OPK PRO DASHBOARD © 2026
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
@@ -349,7 +361,9 @@ import {
   getFirestore,
   collection,
   addDoc,
-  getDocs
+  getDocs,
+  deleteDoc,
+  doc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
@@ -374,6 +388,7 @@ const auth = getAuth(app);
 
 const slotsContainer = document.getElementById("slots");
 const records = document.getElementById("records");
+const adminDashboard = document.getElementById("adminDashboard");
 
 const totalBookings = document.getElementById("totalBookings");
 const todayBookings = document.getElementById("todayBookings");
@@ -426,12 +441,25 @@ async function loadBookings(){
     bookings.push(data);
 
     records.innerHTML += `
-      <div class="record">
-        <strong>${data.name}</strong><br>
-        ${data.slot}<br>
-        ${data.date}
-      </div>
-    `;
+<div class="record">
+<div style="display:flex;justify-content:space-between;gap:15px;align-items:flex-start;">
+<div>
+<strong>${data.name}</strong><br>
+🆔 ${data.bigoId}<br>
+🏢 ${data.agency}<br>
+⭐ ${data.level}<br>
+📧 ${data.gmail}<br>
+🕒 ${data.slot}<br>
+📅 ${data.date}
+</div>
+
+<button onclick="window.deleteBooking('${doc.id}')"
+style="background:#ef4444;border:none;padding:10px 14px;border-radius:12px;color:white;font-weight:700;cursor:pointer;">
+Delete
+</button>
+</div>
+</div>
+`;
   })
 
   totalBookings.innerText = bookings.length;
@@ -510,7 +538,59 @@ async function login(){
 
 async function logout(){
   await signOut(auth);
+  adminDashboard.style.display = 'none';
   alert("Logged Out");
+}
+
+window.deleteBooking = async function(id){
+
+  const confirmDelete = confirm("Delete this booking?");
+
+  if(!confirmDelete) return;
+
+  await deleteDoc(doc(db,"bookings",id));
+
+  alert("Booking Deleted");
+
+  loadBookings();
+}
+
+async function clearAllBookings(){
+
+  const confirmDelete = confirm("Delete ALL bookings?");
+
+  if(!confirmDelete) return;
+
+  const snap = await getDocs(collection(db,"bookings"));
+
+  for(const item of snap.docs){
+    await deleteDoc(doc(db,"bookings",item.id));
+  }
+
+  alert("All bookings deleted");
+
+  loadBookings();
+}
+
+function downloadExcel(){
+
+  const exportData = bookings.map(x => ({
+    Name:x.name,
+    BigoID:x.bigoId,
+    Agency:x.agency,
+    Level:x.level,
+    Gmail:x.gmail,
+    Date:x.date,
+    Time:x.slot
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(workbook,worksheet,"Bookings");
+
+  XLSX.writeFile(workbook,"CN_OPK_BOOKINGS.xlsx");
 }
 
 document.getElementById("bookBtn")
@@ -522,8 +602,22 @@ document.getElementById("loginBtn")
 document.getElementById("logoutBtn")
 .addEventListener("click",logout);
 
+document.getElementById("downloadExcelBtn")
+.addEventListener("click",downloadExcel);
+
+document.getElementById("clearBookingsBtn")
+.addEventListener("click",clearAllBookings);
+
 onAuthStateChanged(auth,(user)=>{
-  console.log(user ? "Admin Online" : "Guest Mode")
+
+  if(user){
+    adminDashboard.style.display = 'block';
+    console.log("Admin Online");
+  }
+  else{
+    adminDashboard.style.display = 'none';
+    console.log("Guest Mode");
+  }
 })
 
 renderSlots();
@@ -534,272 +628,3 @@ loadBookings();
 </body>
 </html>
 
-export default function CNBookingWebsite() {
-
-  const [selectedSlot, setSelectedSlot] = useState("")
-  const [bookings, setBookings] = useState([])
-  const [isAdmin, setIsAdmin] = useState(false)
-
-  const [form, setForm] = useState({
-    name: "",
-    bigoId: "",
-    agency: "",
-    level: "",
-    gmail: "",
-    date: ""
-  })
-
-  const [admin, setAdmin] = useState({
-    email: "",
-    password: ""
-  })
-
-  const slots = [
-    '8:00 PM','8:15 PM','8:30 PM','8:45 PM',
-    '9:00 PM','9:15 PM','9:30 PM','9:45 PM',
-    '10:00 PM','10:15 PM'
-  ]
-
-  useEffect(() => {
-    loadBookings()
-
-    const unsub = onAuthStateChanged(auth, (user) => {
-      setIsAdmin(!!user)
-    })
-
-    return () => unsub()
-  }, [])
-
-  async function loadBookings() {
-    const snap = await getDocs(collection(db, "bookings"))
-
-    const data = []
-
-    snap.forEach((doc) => {
-      data.push({ id: doc.id, ...doc.data() })
-    })
-
-    setBookings(data)
-  }
-
-  async function handleBooking() {
-
-    if (
-      !form.name ||
-      !form.bigoId ||
-      !form.agency ||
-      !form.level ||
-      !form.gmail ||
-      !form.date
-    ) {
-      alert("Complete all fields")
-      return
-    }
-
-    if (!selectedSlot) {
-      alert("Select a time slot")
-      return
-    }
-
-    const alreadyBooked = bookings.find(
-      (b) =>
-        b.date === form.date &&
-        b.slot === selectedSlot
-    )
-
-    if (alreadyBooked) {
-      alert("Time slot already booked")
-      return
-    }
-
-    await addDoc(collection(db, "bookings"), {
-      ...form,
-      slot: selectedSlot,
-      createdAt: new Date()
-    })
-
-    alert("Booking Successful 🚀")
-
-    setForm({
-      name: "",
-      bigoId: "",
-      agency: "",
-      level: "",
-      gmail: "",
-      date: ""
-    })
-
-    setSelectedSlot("")
-
-    loadBookings()
-  }
-
-  async function handleLogin() {
-    try {
-      await signInWithEmailAndPassword(
-        auth,
-        admin.email,
-        admin.password
-      )
-
-      alert("Admin Login Success")
-
-    } catch (err) {
-      alert("Login Failed")
-    }
-  }
-
-  async function handleLogout() {
-    await signOut(auth)
-  }
-
-  const today = new Date().toISOString().split("T")[0]
-
-  const todayBookings = bookings.filter(
-    (b) => b.date === today
-  )
-
-  return (
-    <div className="min-h-screen bg-black text-white overflow-hidden relative">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,#7c3aed33,transparent_30%),radial-gradient(circle_at_bottom_left,#06b6d433,transparent_30%)]"></div>
-
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
-
-        {/* HEADER */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-3 bg-white/10 border border-white/10 px-5 py-2 rounded-full backdrop-blur-xl mb-4">
-            <div className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse"></div>
-            <span className="text-sm tracking-wider uppercase">CN OPK Booking System</span>
-          </div>
-
-          <h1 className="text-5xl md:text-7xl font-black bg-gradient-to-r from-violet-400 via-cyan-300 to-pink-400 bg-clip-text text-transparent leading-tight">
-            CN
-            <br />
-            Booking Portal
-          </h1>
-
-          <p className="text-gray-400 mt-5 text-lg max-w-2xl mx-auto">
-            Fast. Smooth. Premium reservation system for OPK scheduling.
-          </p>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-6">
-
-          {/* BOOKING CARD */}
-          <div className="lg:col-span-2 bg-white/5 border border-white/10 backdrop-blur-2xl rounded-3xl p-6 shadow-2xl">
-
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold">Reserve Your Slot</h2>
-                <p className="text-gray-400 text-sm mt-1">Choose your preferred OPK schedule</p>
-              </div>
-
-              <div className="bg-gradient-to-r from-violet-500 to-cyan-400 px-4 py-2 rounded-2xl text-sm font-semibold text-black">
-                LIVE
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              <input placeholder="Bigo Name" className="bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-cyan-400 transition" />
-
-              <input placeholder="Bigo ID" className="bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-cyan-400 transition" />
-
-              <input placeholder="Agency" className="bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-cyan-400 transition" />
-
-              <input placeholder="Level" className="bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-cyan-400 transition" />
-
-              <input placeholder="Gmail" className="bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-cyan-400 transition md:col-span-2" />
-
-              <input type="date" className="bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-cyan-400 transition md:col-span-2" />
-            </div>
-
-            <div className="mt-8">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold">Select Time</h3>
-                <span className="text-cyan-300 text-sm">15 mins interval</span>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {slots.map((slot, index) => (
-                  <button
-                    key={index}
-                    className="group relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl py-4 hover:scale-105 transition-all duration-300 hover:border-cyan-400"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-violet-500/0 to-cyan-400/0 group-hover:from-violet-500/20 group-hover:to-cyan-400/20"></div>
-
-                    <span className="relative z-10 font-semibold">
-                      {slot}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <button className="w-full mt-8 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 hover:scale-[1.02] transition-all duration-300 rounded-2xl py-5 text-lg font-black text-black shadow-2xl">
-              Reserve Now 🚀
-            </button>
-          </div>
-
-          {/* SIDEBAR */}
-          <div className="space-y-6">
-
-            {/* ADMIN */}
-            <div className="bg-white/5 border border-white/10 backdrop-blur-2xl rounded-3xl p-6">
-              <h3 className="text-2xl font-bold mb-5">Admin Login</h3>
-
-              <div className="space-y-4">
-                <input
-                  placeholder="Admin Email"
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-violet-400 transition"
-                />
-
-                <input
-                  type="password"
-                  placeholder="Password"
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-violet-400 transition"
-                />
-
-                <button className="w-full bg-gradient-to-r from-cyan-400 to-violet-500 rounded-2xl py-4 font-bold text-black hover:scale-[1.03] transition-all">
-                  Login
-                </button>
-              </div>
-            </div>
-
-            {/* STATS */}
-            <div className="bg-white/5 border border-white/10 backdrop-blur-2xl rounded-3xl p-6">
-              <h3 className="text-2xl font-bold mb-5">Live Stats</h3>
-
-              <div className="space-y-4">
-                <div className="bg-black/30 rounded-2xl p-5 flex justify-between items-center">
-                  <span className="text-gray-400">Total Bookings</span>
-                  <span className="text-3xl font-black text-cyan-300">24</span>
-                </div>
-
-                <div className="bg-black/30 rounded-2xl p-5 flex justify-between items-center">
-                  <span className="text-gray-400">Today</span>
-                  <span className="text-3xl font-black text-violet-300">8</span>
-                </div>
-              </div>
-            </div>
-
-            {/* CONTACT */}
-            <div className="bg-gradient-to-br from-violet-500/20 to-cyan-400/20 border border-white/10 backdrop-blur-2xl rounded-3xl p-6">
-              <h3 className="text-2xl font-bold mb-4">Contact</h3>
-
-              <div className="space-y-3 text-gray-300">
-                <p>📞 09911530204</p>
-                <p>📧 crisnoel1217@gmail.com</p>
-                <p>🎯 BIGO ID: TRD10_28</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* FOOTER */}
-        <div className="text-center mt-10 text-gray-500 text-sm">
-          CN OPK PRO DASHBOARD © 2026
-        </div>
-      </div>
-    </div>
-  )
-}
