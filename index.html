@@ -1,318 +1,298 @@
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
+import { useEffect, useState } from "react"
+import { initializeApp } from "firebase/app"
 import {
   getFirestore,
   collection,
   addDoc,
   getDocs
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+} from "firebase/firestore"
 
 import {
   getAuth,
   signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  onAuthStateChanged,
+  signOut
+} from "firebase/auth"
 
-/* FIREBASE CONFIG */
 const firebaseConfig = {
-  apiKey: "AIzaSyBJBT_BAeos1hb_fKJzSontJVgBub9Wjhc",
+   apiKey: "AIzaSyBJBT_BAeos1hb_fKJzSontJVgBub9Wjhc",
   authDomain: "opk-system-cn.firebaseapp.com",
   projectId: "opk-system-cn",
   storageBucket: "opk-system-cn.appspot.com",
   messagingSenderId: "1098097772017",
   appId: "1:1098097772017:web:4e015378c786d6b404f050"
-};
-
-/* INIT */
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-/* ELEMENTS */
-const slots = document.getElementById("slots");
-const adminPanel = document.getElementById("adminPanel");
-const records = document.getElementById("records");
-
-const total = document.getElementById("total");
-const today = document.getElementById("today");
-
-const bookBtn = document.getElementById("bookBtn");
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-
-const adminEmail = document.getElementById("adminEmail");
-const adminPassword = document.getElementById("adminPassword");
-
-let selectedTime = "";
-
-/* GENERATE TIME SLOTS */
-function generateSlots() {
-
-  let slotsArray = [];
-
-  let hour = 20;
-  let minute = 0;
-
-  while (hour < 22 || (hour === 22 && minute <= 15)) {
-
-    const displayHour =
-      hour > 12 ? hour - 12 : hour;
-
-    const displayMinute =
-      minute.toString().padStart(2, "0");
-
-    const period =
-      hour >= 12 ? "PM" : "AM";
-
-    slotsArray.push(
-      `${displayHour}:${displayMinute} ${period}`
-    );
-
-    minute += 15;
-
-    if (minute >= 60) {
-      minute = 0;
-      hour++;
-    }
-  }
-
-  return slotsArray;
 }
 
-/* RENDER SLOTS */
-function renderSlots() {
+const app = initializeApp(firebaseConfig)
+const db = getFirestore(app)
+const auth = getAuth(app)
 
-  slots.innerHTML = "";
+export default function CNBookingWebsite() {
 
-  generateSlots().forEach((time) => {
+  const [selectedSlot, setSelectedSlot] = useState("")
+  const [bookings, setBookings] = useState([])
+  const [isAdmin, setIsAdmin] = useState(false)
 
-    const div = document.createElement("div");
+  const [form, setForm] = useState({
+    name: "",
+    bigoId: "",
+    agency: "",
+    level: "",
+    gmail: "",
+    date: ""
+  })
 
-    div.className = "slot-btn available";
+  const [admin, setAdmin] = useState({
+    email: "",
+    password: ""
+  })
 
-    div.textContent = time;
+  const slots = [
+    '8:00 PM','8:15 PM','8:30 PM','8:45 PM',
+    '9:00 PM','9:15 PM','9:30 PM','9:45 PM',
+    '10:00 PM','10:15 PM'
+  ]
 
-    div.onclick = () => {
+  useEffect(() => {
+    loadBookings()
 
-      document
-        .querySelectorAll("#slots .slot-btn")
-        .forEach((btn) => {
-          btn.classList.remove("selected");
-        });
+    const unsub = onAuthStateChanged(auth, (user) => {
+      setIsAdmin(!!user)
+    })
 
-      div.classList.add("selected");
+    return () => unsub()
+  }, [])
 
-      selectedTime = time;
-    };
+  async function loadBookings() {
+    const snap = await getDocs(collection(db, "bookings"))
 
-    slots.appendChild(div);
-  });
-}
-
-/* BOOK FUNCTION */
-async function book() {
-
-  const name =
-    document.getElementById("name").value.trim();
-
-  const id =
-    document.getElementById("id").value.trim();
-
-  const lvl =
-    document.getElementById("lvl").value.trim();
-
-  const agency =
-    document.getElementById("agency").value.trim();
-
-  const gmail =
-    document.getElementById("gmail").value.trim();
-
-  const date =
-    document.getElementById("date").value;
-
-  if (
-    !name ||
-    !id ||
-    !lvl ||
-    !agency ||
-    !gmail ||
-    !date
-  ) {
-    alert("❌ Please complete all fields");
-    return;
-  }
-
-  if (!selectedTime) {
-    alert("❌ Please select a time slot");
-    return;
-  }
-
-  try {
-
-    /* CHECK DOUBLE BOOKING */
-    const snap = await getDocs(
-      collection(db, "bookings")
-    );
-
-    let alreadyBooked = false;
+    const data = []
 
     snap.forEach((doc) => {
+      data.push({ id: doc.id, ...doc.data() })
+    })
 
-      const data = doc.data();
+    setBookings(data)
+  }
 
-      if (
-        data.date === date &&
-        data.time === selectedTime
-      ) {
-        alreadyBooked = true;
-      }
-    });
+  async function handleBooking() {
+
+    if (
+      !form.name ||
+      !form.bigoId ||
+      !form.agency ||
+      !form.level ||
+      !form.gmail ||
+      !form.date
+    ) {
+      alert("Complete all fields")
+      return
+    }
+
+    if (!selectedSlot) {
+      alert("Select a time slot")
+      return
+    }
+
+    const alreadyBooked = bookings.find(
+      (b) =>
+        b.date === form.date &&
+        b.slot === selectedSlot
+    )
 
     if (alreadyBooked) {
-      alert("❌ Time slot already booked");
-      return;
+      alert("Time slot already booked")
+      return
     }
 
-    /* SAVE BOOKING */
     await addDoc(collection(db, "bookings"), {
-      name,
-      id,
-      lvl,
-      agency,
-      gmail,
-      date,
-      time: selectedTime,
+      ...form,
+      slot: selectedSlot,
       createdAt: new Date()
-    });
+    })
 
-    alert("✅ Booking Successful");
+    alert("Booking Successful 🚀")
 
-    location.reload();
+    setForm({
+      name: "",
+      bigoId: "",
+      agency: "",
+      level: "",
+      gmail: "",
+      date: ""
+    })
 
-  } catch (error) {
+    setSelectedSlot("")
 
-    console.error(error);
-
-    alert("❌ Booking Failed");
-  }
-}
-
-/* ADMIN LOGIN */
-async function login() {
-
-  const email =
-    adminEmail.value.trim();
-
-  const password =
-    adminPassword.value.trim();
-
-  if (!email || !password) {
-    alert("❌ Enter Email & Password");
-    return;
+    loadBookings()
   }
 
-  try {
+  async function handleLogin() {
+    try {
+      await signInWithEmailAndPassword(
+        auth,
+        admin.email,
+        admin.password
+      )
 
-    await signInWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
+      alert("Admin Login Success")
 
-    alert("✅ Login Successful");
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert("❌ Login Failed");
+    } catch (err) {
+      alert("Login Failed")
+    }
   }
-}
 
-/* LOGOUT */
-async function logout() {
-
-  try {
-
-    await signOut(auth);
-
-    alert("✅ Logged Out");
-
-  } catch (error) {
-
-    console.error(error);
+  async function handleLogout() {
+    await signOut(auth)
   }
-}
 
-/* BUTTON EVENTS */
-bookBtn.addEventListener(
-  "click",
-  book
-);
+  const today = new Date().toISOString().split("T")[0]
 
-loginBtn.addEventListener(
-  "click",
-  login
-);
+  const todayBookings = bookings.filter(
+    (b) => b.date === today
+  )
 
-logoutBtn.addEventListener(
-  "click",
-  logout
-);
+  return (
+    <div className="min-h-screen bg-black text-white overflow-hidden relative">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,#7c3aed33,transparent_30%),radial-gradient(circle_at_bottom_left,#06b6d433,transparent_30%)]"></div>
 
-/* ADMIN STATE */
-onAuthStateChanged(auth, async (user) => {
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
 
-  if (user) {
+        {/* HEADER */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-3 bg-white/10 border border-white/10 px-5 py-2 rounded-full backdrop-blur-xl mb-4">
+            <div className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse"></div>
+            <span className="text-sm tracking-wider uppercase">CN OPK Booking System</span>
+          </div>
 
-    adminPanel.style.display = "block";
+          <h1 className="text-5xl md:text-7xl font-black bg-gradient-to-r from-violet-400 via-cyan-300 to-pink-400 bg-clip-text text-transparent leading-tight">
+            CN
+            <br />
+            Booking Portal
+          </h1>
 
-    records.innerHTML = "";
-
-    const snap = await getDocs(
-      collection(db, "bookings")
-    );
-
-    const todayDate =
-      new Date()
-      .toISOString()
-      .split("T")[0];
-
-    let todayCount = 0;
-
-    snap.forEach((doc) => {
-
-      const booking = doc.data();
-
-      if (
-        booking.date === todayDate
-      ) {
-        todayCount++;
-      }
-
-      records.innerHTML += `
-        <div class="slot-btn">
-          ${booking.name}
-          <br>
-          ${booking.time}
-          <br>
-          ${booking.date}
+          <p className="text-gray-400 mt-5 text-lg max-w-2xl mx-auto">
+            Fast. Smooth. Premium reservation system for OPK scheduling.
+          </p>
         </div>
-      `;
-    });
 
-    total.innerText = snap.size;
-    today.innerText = todayCount;
+        <div className="grid lg:grid-cols-3 gap-6">
 
-  } else {
+          {/* BOOKING CARD */}
+          <div className="lg:col-span-2 bg-white/5 border border-white/10 backdrop-blur-2xl rounded-3xl p-6 shadow-2xl">
 
-    adminPanel.style.display = "none";
-  }
-});
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold">Reserve Your Slot</h2>
+                <p className="text-gray-400 text-sm mt-1">Choose your preferred OPK schedule</p>
+              </div>
 
-/* START */
-renderSlots();
+              <div className="bg-gradient-to-r from-violet-500 to-cyan-400 px-4 py-2 rounded-2xl text-sm font-semibold text-black">
+                LIVE
+              </div>
+            </div>
 
-</script>
+            <div className="grid md:grid-cols-2 gap-4">
+              <input placeholder="Bigo Name" className="bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-cyan-400 transition" />
+
+              <input placeholder="Bigo ID" className="bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-cyan-400 transition" />
+
+              <input placeholder="Agency" className="bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-cyan-400 transition" />
+
+              <input placeholder="Level" className="bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-cyan-400 transition" />
+
+              <input placeholder="Gmail" className="bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-cyan-400 transition md:col-span-2" />
+
+              <input type="date" className="bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-cyan-400 transition md:col-span-2" />
+            </div>
+
+            <div className="mt-8">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold">Select Time</h3>
+                <span className="text-cyan-300 text-sm">15 mins interval</span>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {slots.map((slot, index) => (
+                  <button
+                    key={index}
+                    className="group relative overflow-hidden bg-white/5 border border-white/10 rounded-2xl py-4 hover:scale-105 transition-all duration-300 hover:border-cyan-400"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-violet-500/0 to-cyan-400/0 group-hover:from-violet-500/20 group-hover:to-cyan-400/20"></div>
+
+                    <span className="relative z-10 font-semibold">
+                      {slot}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button className="w-full mt-8 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 hover:scale-[1.02] transition-all duration-300 rounded-2xl py-5 text-lg font-black text-black shadow-2xl">
+              Reserve Now 🚀
+            </button>
+          </div>
+
+          {/* SIDEBAR */}
+          <div className="space-y-6">
+
+            {/* ADMIN */}
+            <div className="bg-white/5 border border-white/10 backdrop-blur-2xl rounded-3xl p-6">
+              <h3 className="text-2xl font-bold mb-5">Admin Login</h3>
+
+              <div className="space-y-4">
+                <input
+                  placeholder="Admin Email"
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-violet-400 transition"
+                />
+
+                <input
+                  type="password"
+                  placeholder="Password"
+                  className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 outline-none focus:border-violet-400 transition"
+                />
+
+                <button className="w-full bg-gradient-to-r from-cyan-400 to-violet-500 rounded-2xl py-4 font-bold text-black hover:scale-[1.03] transition-all">
+                  Login
+                </button>
+              </div>
+            </div>
+
+            {/* STATS */}
+            <div className="bg-white/5 border border-white/10 backdrop-blur-2xl rounded-3xl p-6">
+              <h3 className="text-2xl font-bold mb-5">Live Stats</h3>
+
+              <div className="space-y-4">
+                <div className="bg-black/30 rounded-2xl p-5 flex justify-between items-center">
+                  <span className="text-gray-400">Total Bookings</span>
+                  <span className="text-3xl font-black text-cyan-300">24</span>
+                </div>
+
+                <div className="bg-black/30 rounded-2xl p-5 flex justify-between items-center">
+                  <span className="text-gray-400">Today</span>
+                  <span className="text-3xl font-black text-violet-300">8</span>
+                </div>
+              </div>
+            </div>
+
+            {/* CONTACT */}
+            <div className="bg-gradient-to-br from-violet-500/20 to-cyan-400/20 border border-white/10 backdrop-blur-2xl rounded-3xl p-6">
+              <h3 className="text-2xl font-bold mb-4">Contact</h3>
+
+              <div className="space-y-3 text-gray-300">
+                <p>📞 09911530204</p>
+                <p>📧 crisnoel1217@gmail.com</p>
+                <p>🎯 BIGO ID: TRD10_28</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <div className="text-center mt-10 text-gray-500 text-sm">
+          CN OPK PRO DASHBOARD © 2026
+        </div>
+      </div>
+    </div>
+  )
+}
