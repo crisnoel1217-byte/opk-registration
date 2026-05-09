@@ -1,5 +1,6 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
 import {
   getFirestore,
   collection,
@@ -14,7 +15,7 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-/* FIREBASE */
+/* FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyBJBT_BAeos1hb_fKJzSontJVgBub9Wjhc",
   authDomain: "opk-system-cn.firebaseapp.com",
@@ -24,6 +25,7 @@ const firebaseConfig = {
   appId: "1:1098097772017:web:4e015378c786d6b404f050"
 };
 
+/* INIT */
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -32,6 +34,7 @@ const auth = getAuth(app);
 const slots = document.getElementById("slots");
 const adminPanel = document.getElementById("adminPanel");
 const records = document.getElementById("records");
+
 const total = document.getElementById("total");
 const today = document.getElementById("today");
 
@@ -44,73 +47,135 @@ const adminPassword = document.getElementById("adminPassword");
 
 let selectedTime = "";
 
-/* TIME SLOTS */
+/* GENERATE TIME SLOTS */
 function generateSlots() {
-  let s = [];
-  let h = 20;
-  let m = 0;
 
-  while (h < 22 || (h === 22 && m <= 15)) {
-    let hour = h > 12 ? h - 12 : h;
-    let minute = m.toString().padStart(2, "0");
-    let ampm = h >= 12 ? "PM" : "AM";
+  let slotsArray = [];
 
-    s.push(`${hour}:${minute} ${ampm}`);
+  let hour = 20;
+  let minute = 0;
 
-    m += 15;
+  while (hour < 22 || (hour === 22 && minute <= 15)) {
 
-    if (m >= 60) {
-      m = 0;
-      h++;
+    const displayHour =
+      hour > 12 ? hour - 12 : hour;
+
+    const displayMinute =
+      minute.toString().padStart(2, "0");
+
+    const period =
+      hour >= 12 ? "PM" : "AM";
+
+    slotsArray.push(
+      `${displayHour}:${displayMinute} ${period}`
+    );
+
+    minute += 15;
+
+    if (minute >= 60) {
+      minute = 0;
+      hour++;
     }
   }
 
-  return s;
+  return slotsArray;
 }
 
 /* RENDER SLOTS */
 function renderSlots() {
+
   slots.innerHTML = "";
 
-  generateSlots().forEach((t) => {
+  generateSlots().forEach((time) => {
+
     const div = document.createElement("div");
 
     div.className = "slot-btn available";
-    div.textContent = t;
+
+    div.textContent = time;
 
     div.onclick = () => {
-      document.querySelectorAll(".slot-btn").forEach((x) => {
-        x.classList.remove("selected");
-      });
+
+      document
+        .querySelectorAll("#slots .slot-btn")
+        .forEach((btn) => {
+          btn.classList.remove("selected");
+        });
 
       div.classList.add("selected");
-      selectedTime = t;
+
+      selectedTime = time;
     };
 
     slots.appendChild(div);
   });
 }
 
-/* BOOKING */
+/* BOOK FUNCTION */
 async function book() {
-  const name = document.getElementById("name").value.trim();
-  const id = document.getElementById("id").value.trim();
-  const lvl = document.getElementById("lvl").value.trim();
-  const agency = document.getElementById("agency").value.trim();
-  const gmail = document.getElementById("gmail").value.trim();
-  const date = document.getElementById("date").value;
 
-  if (!name || !id || !lvl || !agency || !gmail || !date) {
-    alert("❌ Complete all fields");
+  const name =
+    document.getElementById("name").value.trim();
+
+  const id =
+    document.getElementById("id").value.trim();
+
+  const lvl =
+    document.getElementById("lvl").value.trim();
+
+  const agency =
+    document.getElementById("agency").value.trim();
+
+  const gmail =
+    document.getElementById("gmail").value.trim();
+
+  const date =
+    document.getElementById("date").value;
+
+  if (
+    !name ||
+    !id ||
+    !lvl ||
+    !agency ||
+    !gmail ||
+    !date
+  ) {
+    alert("❌ Please complete all fields");
     return;
   }
 
   if (!selectedTime) {
-    alert("❌ Select a time slot");
+    alert("❌ Please select a time slot");
     return;
   }
 
   try {
+
+    /* CHECK DOUBLE BOOKING */
+    const snap = await getDocs(
+      collection(db, "bookings")
+    );
+
+    let alreadyBooked = false;
+
+    snap.forEach((doc) => {
+
+      const data = doc.data();
+
+      if (
+        data.date === date &&
+        data.time === selectedTime
+      ) {
+        alreadyBooked = true;
+      }
+    });
+
+    if (alreadyBooked) {
+      alert("❌ Time slot already booked");
+      return;
+    }
+
+    /* SAVE BOOKING */
     await addDoc(collection(db, "bookings"), {
       name,
       id,
@@ -126,68 +191,114 @@ async function book() {
 
     location.reload();
 
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+
+    console.error(error);
+
     alert("❌ Booking Failed");
   }
 }
 
-/* LOGIN */
+/* ADMIN LOGIN */
 async function login() {
-  const email = adminEmail.value.trim();
-  const password = adminPassword.value.trim();
+
+  const email =
+    adminEmail.value.trim();
+
+  const password =
+    adminPassword.value.trim();
 
   if (!email || !password) {
-    alert("❌ Enter admin email & password");
+    alert("❌ Enter Email & Password");
     return;
   }
 
   try {
-    await signInWithEmailAndPassword(auth, email, password);
-    alert("✅ Login Success");
 
-  } catch (e) {
-    console.error(e);
+    await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    alert("✅ Login Successful");
+
+  } catch (error) {
+
+    console.error(error);
+
     alert("❌ Login Failed");
   }
 }
 
 /* LOGOUT */
 async function logout() {
-  await signOut(auth);
-  alert("Logged out");
+
+  try {
+
+    await signOut(auth);
+
+    alert("✅ Logged Out");
+
+  } catch (error) {
+
+    console.error(error);
+  }
 }
 
 /* BUTTON EVENTS */
-bookBtn.addEventListener("click", book);
-loginBtn.addEventListener("click", login);
-logoutBtn.addEventListener("click", logout);
+bookBtn.addEventListener(
+  "click",
+  book
+);
 
-/* ADMIN PANEL */
+loginBtn.addEventListener(
+  "click",
+  login
+);
+
+logoutBtn.addEventListener(
+  "click",
+  logout
+);
+
+/* ADMIN STATE */
 onAuthStateChanged(auth, async (user) => {
 
   if (user) {
 
     adminPanel.style.display = "block";
 
-    const snap = await getDocs(collection(db, "bookings"));
-
     records.innerHTML = "";
 
+    const snap = await getDocs(
+      collection(db, "bookings")
+    );
+
+    const todayDate =
+      new Date()
+      .toISOString()
+      .split("T")[0];
+
     let todayCount = 0;
-    const todayDate = new Date().toISOString().split("T")[0];
 
     snap.forEach((doc) => {
 
-      const b = doc.data();
+      const booking = doc.data();
 
-      if (b.date === todayDate) {
+      if (
+        booking.date === todayDate
+      ) {
         todayCount++;
       }
 
       records.innerHTML += `
         <div class="slot-btn">
-          ${b.name} | ${b.time} | ${b.date}
+          ${booking.name}
+          <br>
+          ${booking.time}
+          <br>
+          ${booking.date}
         </div>
       `;
     });
@@ -203,4 +314,5 @@ onAuthStateChanged(auth, async (user) => {
 
 /* START */
 renderSlots();
+
 </script>
