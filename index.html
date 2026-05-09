@@ -631,6 +631,25 @@ loadBookings();
   <p style="color:#9ca3af;">📧 CRISNOEL1217@GMAIL.COM</p>
   <p style="color:#9ca3af;">🎯 BIGO ID: TRD10_28</p>
 </div>
+  <!-- SUCCESS SCREEN -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-box">
+    <h1>🎉 BOOKED!</h1>
+    <p>Your reservation is confirmed</p>
+    <p style="margin-top:10px;font-size:12px;opacity:0.8">See you on your schedule 🚀</p>
+  </div>
+</div>
+<script>
+function showSuccess(){
+  const el = document.getElementById('successOverlay');
+  el.style.display = 'flex';
+
+  setTimeout(()=>{
+    el.style.display = 'none';
+  },2500);
+}
+</script>
+
 </body>
 </html>
 
