@@ -1,220 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CN OPK PRO DASHBOARD V2</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-<style>
-:root{
-  --bg:#0a0a12;
-  --card:#111827;
-  --accent:#7c3aed;
-  --accent2:#22d3ee;
-  --green:#22c55e;
-  --red:#ef4444;
-}
-
-*{margin:0;padding:0;box-sizing:border-box;font-family:Inter}
-body{background:linear-gradient(135deg,#020617,#0a0a12);color:white}
-
-header{
-  text-align:center;
-  padding:18px;
-  font-size:22px;
-  font-weight:700;
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
-  -webkit-background-clip:text;
-  color:transparent;
-}
-
-.container{max-width:1200px;margin:auto;padding:15px}
-.grid{display:grid;gap:15px}
-@media(min-width:768px){.grid{grid-template-columns:1fr 1fr}}
-
-.card{
-  background:rgba(255,255,255,0.05);
-  padding:15px;
-  border-radius:14px;
-  backdrop-filter:blur(10px);
-}
-
-input,button{
-  width:100%;
-  padding:12px;
-  margin-top:10px;
-  border-radius:10px;
-  border:none;
-}
-
-input{background:#020617;color:white}
-
-button{
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
-  font-weight:600;
-  cursor:pointer;
-}
-
-/* slots */
-.slots-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin-top:10px;
-}
-
-.slot-btn{
-  padding:10px;
-  border-radius:10px;
-  text-align:center;
-  font-size:13px;
-  background:rgba(255,255,255,0.08);
-  cursor:pointer;
-  transition:0.2s;
-  border:1px solid rgba(255,255,255,0.08);
-}
-
-.slot-btn:hover{
-  transform:translateY(-2px);
-  background:rgba(34,211,238,0.10);
-}
-
-.available{color:var(--green)}
-.taken{color:var(--red);opacity:.6}
-
-.selected{
-  border:2px solid var(--accent2);
-  background:rgba(34,211,238,0.18);
-}
-
-.admin{display:none}
-
-.error{color:#f87171;font-size:13px;margin-top:6px}
-
-.badge{
-  background:var(--accent2);
-  color:black;
-  padding:4px 10px;
-  border-radius:999px;
-  font-size:12px;
-}
-
-.stats{
-  display:flex;
-  justify-content:space-between;
-  margin-top:8px;
-}
-
-.summaryBox{
-  margin-top:10px;
-  padding:10px;
-  border-radius:10px;
-  background:rgba(255,255,255,0.06);
-}
-
-/* footer */
-.footer{
-  margin-top:20px;
-  text-align:center;
-  padding:15px;
-  font-size:13px;
-  opacity:0.9;
-  background:rgba(255,255,255,0.05);
-  border-radius:12px;
-}
-</style>
-</head>
-
-<body>
-
-<header> CN OPK BOOKING SYSTEM</header>
-
-<div class="container grid">
-
-<!-- BOOKING -->
-<div class="card">
-<h3>📅 Booking</h3>
-
-<input id="name" placeholder="Bigo Name">
-<input id="id" placeholder="Bigo ID">
-<input id="lvl" placeholder="Level">
-<input id="agency" placeholder="Agency">
-<input id="gmail" placeholder="Gmail">
-<input id="date" type="date">
-
-<h4 style="margin-top:10px">Select Time</h4>
-<div id="slots" class="slots-grid"></div>
-
-<div id="error" class="error"></div>
-
-<button id="bookBtn">Reserve</button>
-</div>
-
-<!-- ADMIN LOGIN -->
-<div class="card">
-<h3>🔐 Admin Login</h3>
-
-<input id="adminEmail" placeholder="Email">
-<input id="adminPassword" type="password" placeholder="Password">
-
-<button id="loginBtn">Login</button>
-<button id="logoutBtn">Logout</button>
-
-</div>
-
-<!-- ADMIN DASHBOARD -->
-<div class="card admin" id="adminPanel">
-
-<h3>📊 Dashboard</h3>
-
-<div class="stats">
-<span>Total</span>
-<span id="total" class="badge">0</span>
-</div>
-
-<div class="stats">
-<span>Today</span>
-<span id="today" class="badge">0</span>
-</div>
-
-<h4 style="margin-top:10px">Bookings</h4>
-<div id="records"></div>
-
-</div>
-
-</div>
-
-<!-- FOOTER -->
-<div class="footer">
-  <h4>📩 For Inquiries</h4>
-  <p>📞 09911530204</p>
-  <p>📧 CRISNOEL1217@GMAIL.COM</p>
-  <p>🎯 BIGO ID: TRD10_28</p>
-</div>
-
-<script type="module">
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+/* FIREBASE */
 const firebaseConfig = {
-apiKey: "AIzaSyBJBT_BAeos1hb_fKJzSontJVgBub9Wjhc",
- authDomain: "opk-system-cn.firebaseapp.com",
- projectId: "opk-system-cn",
- storageBucket: "opk-system-cn.appspot.com",
- messagingSenderId: "1098097772017",
- appId: "1:1098097772017:web:4e015378c786d6b404f050"
+  apiKey: "AIzaSyBJBT_BAeos1hb_fKJzSontJVgBub9Wjhc",
+  authDomain: "opk-system-cn.firebaseapp.com",
+  projectId: "opk-system-cn",
+  storageBucket: "opk-system-cn.appspot.com",
+  messagingSenderId: "1098097772017",
+  appId: "1:1098097772017:web:4e015378c786d6b404f050"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
-
-let selectedTime = "";
-let allBookings = [];
 
 /* ELEMENTS */
 const slots = document.getElementById("slots");
@@ -223,187 +35,172 @@ const records = document.getElementById("records");
 const total = document.getElementById("total");
 const today = document.getElementById("today");
 
-/* FIXED SLOT SYSTEM */
-function generateSlots(){
- let s=[],h=20,m=0;
- while(h<22||(h===22&&m<=15)){
-  s.push(`${h>12?h-12:h}:${m.toString().padStart(2,'0')} ${h>=12?'PM':'AM'}`);
-  m+=15;if(m>=60){m=0;h++}
- }
- return s;
-}
+const bookBtn = document.getElementById("bookBtn");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
-function renderSlots(){
- slots.innerHTML="";
-
- generateSlots().forEach(t=>{
-  const d=document.createElement("div");
-  d.className="slot-btn";
-  d.textContent=t;
-
-  d.onclick=()=>{
-    document.querySelectorAll(".slot-btn")
-      .forEach(x=>x.classList.remove("selected"));
-
-    d.classList.add("selected");
-    selectedTime = t;
-  };
-
-  slots.appendChild(d);
- });
-}
-
-/* BOOKING FIXED */
-window.book = async function(){
-
- const name = document.getElementById("name").value.trim();
- const id = document.getElementById("id").value.trim();
- const lvl = document.getElementById("lvl").value.trim();
- const agency = document.getElementById("agency").value.trim();
- const gmail = document.getElementById("gmail").value.trim();
- const date = document.getElementById("date").value;
-
- if(!name || !id || !gmail || !date){
-  alert("❌ Please complete all fields");
-  return;
- }
-
- if(!selectedTime){
-  alert("❌ Please select a time slot");
-  return;
- }
-
- try{
-  await addDoc(collection(db,"bookings"),{
-    name,id,lvl,agency,gmail,date,time:selectedTime
-  });
-
-  alert("✅ Booking Successful!");
-  location.reload();
-
- }catch(e){
-  console.error(e);
-  alert("❌ Firebase error (check rules)");
- }
-}
-
-/* ADMIN LOGIN FIXED */
 const adminEmail = document.getElementById("adminEmail");
 const adminPassword = document.getElementById("adminPassword");
 
-window.login = async function(){
- try{
-  await signInWithEmailAndPassword(auth,adminEmail.value,adminPassword.value);
- }catch(e){
-  alert("❌ Login Failed");
- }
+let selectedTime = "";
+
+/* TIME SLOTS */
+function generateSlots() {
+  let s = [];
+  let h = 20;
+  let m = 0;
+
+  while (h < 22 || (h === 22 && m <= 15)) {
+    let hour = h > 12 ? h - 12 : h;
+    let minute = m.toString().padStart(2, "0");
+    let ampm = h >= 12 ? "PM" : "AM";
+
+    s.push(`${hour}:${minute} ${ampm}`);
+
+    m += 15;
+
+    if (m >= 60) {
+      m = 0;
+      h++;
+    }
+  }
+
+  return s;
 }
 
-window.logout = function(){
- signOut(auth);
-}
+/* RENDER SLOTS */
+function renderSlots() {
+  slots.innerHTML = "";
 
-/* AUTH STATE */
-onAuthStateChanged(auth,async(user)=>{
- if(user){
-  adminPanel.style.display="block";
+  generateSlots().forEach((t) => {
+    const div = document.createElement("div");
 
-  const snap = await getDocs(collection(db,"bookings"));
-  records.innerHTML="";
+    div.className = "slot-btn available";
+    div.textContent = t;
 
-  snap.forEach(d=>{
-    let b=d.data();
-    records.innerHTML += `
-      <div class="slot-btn">
-        ${b.name} | ${b.time} | ${b.date}
-      </div>`;
+    div.onclick = () => {
+      document.querySelectorAll(".slot-btn").forEach((x) => {
+        x.classList.remove("selected");
+      });
+
+      div.classList.add("selected");
+      selectedTime = t;
+    };
+
+    slots.appendChild(div);
   });
+}
 
-  total.innerText = snap.size;
- }
- else{
-  adminPanel.style.display="none";
- }
+/* BOOKING */
+async function book() {
+  const name = document.getElementById("name").value.trim();
+  const id = document.getElementById("id").value.trim();
+  const lvl = document.getElementById("lvl").value.trim();
+  const agency = document.getElementById("agency").value.trim();
+  const gmail = document.getElementById("gmail").value.trim();
+  const date = document.getElementById("date").value;
+
+  if (!name || !id || !lvl || !agency || !gmail || !date) {
+    alert("❌ Complete all fields");
+    return;
+  }
+
+  if (!selectedTime) {
+    alert("❌ Select a time slot");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "bookings"), {
+      name,
+      id,
+      lvl,
+      agency,
+      gmail,
+      date,
+      time: selectedTime,
+      createdAt: new Date()
+    });
+
+    alert("✅ Booking Successful");
+
+    location.reload();
+
+  } catch (e) {
+    console.error(e);
+    alert("❌ Booking Failed");
+  }
+}
+
+/* LOGIN */
+async function login() {
+  const email = adminEmail.value.trim();
+  const password = adminPassword.value.trim();
+
+  if (!email || !password) {
+    alert("❌ Enter admin email & password");
+    return;
+  }
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    alert("✅ Login Success");
+
+  } catch (e) {
+    console.error(e);
+    alert("❌ Login Failed");
+  }
+}
+
+/* LOGOUT */
+async function logout() {
+  await signOut(auth);
+  alert("Logged out");
+}
+
+/* BUTTON EVENTS */
+bookBtn.addEventListener("click", book);
+loginBtn.addEventListener("click", login);
+logoutBtn.addEventListener("click", logout);
+
+/* ADMIN PANEL */
+onAuthStateChanged(auth, async (user) => {
+
+  if (user) {
+
+    adminPanel.style.display = "block";
+
+    const snap = await getDocs(collection(db, "bookings"));
+
+    records.innerHTML = "";
+
+    let todayCount = 0;
+    const todayDate = new Date().toISOString().split("T")[0];
+
+    snap.forEach((doc) => {
+
+      const b = doc.data();
+
+      if (b.date === todayDate) {
+        todayCount++;
+      }
+
+      records.innerHTML += `
+        <div class="slot-btn">
+          ${b.name} | ${b.time} | ${b.date}
+        </div>
+      `;
+    });
+
+    total.innerText = snap.size;
+    today.innerText = todayCount;
+
+  } else {
+
+    adminPanel.style.display = "none";
+  }
 });
 
-/* INIT */
+/* START */
 renderSlots();
 </script>
-
-function renderSlots(){
- slots.innerHTML="";
- generateSlots().forEach(t=>{
-  let d=document.createElement("div");
-  d.className="slot-btn";
-  d.textContent=t;
-
-  d.onclick=()=>{
-    document.querySelectorAll(".slot-btn").forEach(x=>x.classList.remove("selected"));
-    d.classList.add("selected");
-    selectedTime=t;
-  };
-
-  slots.appendChild(d);
- });
-}
-
-renderSlots();
-
-/* BOOK */
-window.book = async function(){
- try{
-  await addDoc(collection(db,"bookings"),{
-    name:document.getElementById("name").value,
-    id:document.getElementById("id").value,
-    lvl:document.getElementById("lvl").value,
-    agency:document.getElementById("agency").value,
-    gmail:document.getElementById("gmail").value,
-    date:document.getElementById("date").value,
-    time:selectedTime
-  });
-
-  alert("Booked ✅");
- }catch(e){
-  alert("Error booking (check Firebase rules)");
- }
-}
-
-/* ADMIN LOGIN (SIMPLE) */
-window.login = async function(){
- const email = adminEmail.value;
- const pass = adminPassword.value;
-
- try{
-  await signInWithEmailAndPassword(auth,email,pass);
- }catch(e){
-  alert("Login failed");
- }
-}
-
-window.logout = function(){
- signOut(auth);
-}
-
-onAuthStateChanged(auth,async(user)=>{
- if(user){
-  document.getElementById("adminPanel").style.display="block";
-  const snap = await getDocs(collection(db,"bookings"));
-
-  const box=document.getElementById("records");
-  box.innerHTML="";
-
-  snap.forEach(d=>{
-    let b=d.data();
-    box.innerHTML += `<div class="slot-btn">${b.name} | ${b.time} | ${b.date}</div>`;
-  });
-
-  document.getElementById("total").innerText = snap.size;
- }
- else{
-  document.getElementById("adminPanel").style.display="none";
- }
-});
-</script>
-
-</body>
-</html>
