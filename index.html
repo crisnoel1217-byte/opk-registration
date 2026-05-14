@@ -13,7 +13,56 @@
   box-sizing:border-box;
   font-family:'Inter',sans-serif;
 }
+<!-- BOOKING RECEIPT -->
+<div class="receipt-modal" id="receiptModal">
+  <div class="receipt-box">
 
+    <div class="receipt-title">
+      BOOKING RECEIPT
+    </div>
+
+    <div class="receipt-info">
+      <strong>Name:</strong>
+      <div id="receiptName"></div>
+    </div>
+
+    <div class="receipt-info">
+      <strong>Bigo ID:</strong>
+      <div id="receiptBigoId"></div>
+    </div>
+
+    <div class="receipt-info">
+      <strong>Agency:</strong>
+      <div id="receiptAgency"></div>
+    </div>
+
+    <div class="receipt-info">
+      <strong>Level:</strong>
+      <div id="receiptLevel"></div>
+    </div>
+
+    <div class="receipt-info">
+      <strong>Date:</strong>
+      <div id="receiptDate"></div>
+    </div>
+
+    <div class="receipt-info">
+      <strong>Time:</strong>
+      <div id="receiptSlot"></div>
+    </div>
+
+    <div class="receipt-buttons">
+      <button class="receipt-btn print-btn" onclick="window.print()">
+        Print
+      </button>
+
+      <button class="receipt-btn close-btn" onclick="closeReceipt()">
+        Close
+      </button>
+    </div>
+
+  </div>
+</div>
 body{
   background:#030712;
   color:white;
@@ -593,11 +642,37 @@ async function bookSlot(){
     alert("Time slot already booked");
     return;
   }
-  await addDoc(collection(db,"bookings"),booking);
-  alert("Booking Successful 🚀");
-  location.reload();
+  showReceipt(booking);
+
+document.getElementById("name").value = "";
+document.getElementById("bigoId").value = "";
+document.getElementById("agency").value = "";
+document.getElementById("level").value = "";
+document.getElementById("gmail").value = "";
+document.getElementById("date").value = "";
+
+selectedSlot = "";
+
+document.querySelectorAll(".slot-btn")
+.forEach(btn => btn.classList.remove("selected"));
+
+loadBookings();
+}
+function showReceipt(data){
+
+  document.getElementById("receiptName").innerText = data.name;
+  document.getElementById("receiptBigoId").innerText = data.bigoId;
+  document.getElementById("receiptAgency").innerText = data.agency;
+  document.getElementById("receiptLevel").innerText = data.level;
+  document.getElementById("receiptDate").innerText = data.date;
+  document.getElementById("receiptSlot").innerText = data.slot;
+
+  document.getElementById("receiptModal").style.display = "flex";
 }
 
+function closeReceipt(){
+  document.getElementById("receiptModal").style.display = "none";
+}
 async function login(){
   const email = document.getElementById("adminEmail").value;
   const password = document.getElementById("adminPassword").value;
@@ -731,7 +806,93 @@ onAuthStateChanged(auth,(user)=>{
 
 renderSlots();
 loadBookings();
+/* BOOKING RECEIPT MODAL */
+.receipt-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.75);
+  backdrop-filter:blur(10px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+  padding:20px;
+}
 
+.receipt-box{
+  width:100%;
+  max-width:500px;
+  background:#0f172a;
+  border:2px solid #22d3ee;
+  border-radius:30px;
+  padding:30px;
+  box-shadow:0 0 40px rgba(34,211,238,0.4);
+  animation:popReceipt .3s ease;
+}
+
+@keyframes popReceipt{
+  from{
+    transform:scale(.8);
+    opacity:0;
+  }
+  to{
+    transform:scale(1);
+    opacity:1;
+  }
+}
+
+.receipt-title{
+  font-size:34px;
+  font-weight:900;
+  text-align:center;
+  margin-bottom:25px;
+  background:linear-gradient(90deg,#8b5cf6,#22d3ee,#ec4899);
+  -webkit-background-clip:text;
+  color:transparent;
+}
+
+.receipt-info{
+  background:rgba(255,255,255,0.05);
+  border-radius:20px;
+  padding:18px;
+  margin-bottom:15px;
+  font-size:16px;
+  line-height:1.8;
+}
+
+.receipt-info strong{
+  color:#22d3ee;
+}
+
+.receipt-buttons{
+  display:flex;
+  gap:15px;
+  margin-top:25px;
+}
+
+.receipt-btn{
+  flex:1;
+  border:none;
+  padding:16px;
+  border-radius:18px;
+  font-weight:800;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.print-btn{
+  background:linear-gradient(90deg,#8b5cf6,#22d3ee);
+  color:black;
+}
+
+.close-btn{
+  background:#ef4444;
+  color:white;
+}
+
+.receipt-btn:hover{
+  transform:scale(1.03);
+}
 </script>
   <!-- CONTACT INQUIRIES -->
 <div class="card" style="max-width:900px;margin:30px auto;text-align:center;">
