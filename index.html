@@ -509,6 +509,23 @@ Admin Dashboard
 
 <input id="bigoSearchInput" placeholder="Search Bigo ID">
 
+
+<select id="monthFilter" style="margin-top:15px;margin-bottom:15px;">
+  <option value="">All Months</option>
+  <option value="01">January</option>
+  <option value="02">February</option>
+  <option value="03">March</option>
+  <option value="04">April</option>
+  <option value="05">May</option>
+  <option value="06">June</option>
+  <option value="07">July</option>
+  <option value="08">August</option>
+  <option value="09">September</option>
+  <option value="10">October</option>
+  <option value="11">November</option>
+  <option value="12">December</option>
+</select>
+
 <button class="login-btn" id="downloadExcelBtn">
 Download Excel Report
 </button>
@@ -1054,22 +1071,45 @@ loadBookings();
 
 function downloadExcel(){
 
-const worksheet =
-XLSX.utils.json_to_sheet(bookings);
+  const selectedMonth =
+  document.getElementById("monthFilter").value;
 
-const workbook =
-XLSX.utils.book_new();
+  let filteredBookings = bookings;
 
-XLSX.utils.book_append_sheet(
-workbook,
-worksheet,
-"Bookings"
-);
+  if(selectedMonth){
+    filteredBookings = bookings.filter(item=>{
+      if(!item.date) return false;
+      const month = item.date.split("-")[1];
+      return month === selectedMonth;
+    });
+  }
 
-XLSX.writeFile(
-workbook,
-"BOOKINGS.xlsx"
-);
+  if(filteredBookings.length === 0){
+    alert("No bookings found for selected month.");
+    return;
+  }
+
+  const worksheet =
+  XLSX.utils.json_to_sheet(filteredBookings);
+
+  const workbook =
+  XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+  workbook,
+  worksheet,
+  "Bookings"
+  );
+
+  const fileName =
+  selectedMonth
+  ? `BOOKINGS_${selectedMonth}.xlsx`
+  : "BOOKINGS_ALL.xlsx";
+
+  XLSX.writeFile(
+  workbook,
+  fileName
+  );
 
 }
 
